@@ -1,17 +1,22 @@
 "use client";
 
-// Replacement for CalendarKit's built-in edit card.
+// Replacement for CalendarKit's built-in edit card, built from the admin's
+// own primitives: ResponsiveSheet, Input, Button and ConfirmModal. No custom
+// colours, radii or spacing are introduced here.
 //
-// The library's card offers Location, Guests, Reminders and Description,
-// none of which exist on a generated Grit resource. This form renders only
-// the resource fields listed in config/calendar.ts under editing.fields, and
-// hides Delete unless editing.canDelete is true.
+// CalendarKit's stylesheet is unlayered and wins over Tailwind's layered
+// utilities anywhere inside .ck-root, so the sheet is portalled to body. That
+// is a containment fix, not a visual decision.
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { EventEditorProps, Resource } from "calendarkit-pro";
 
 import type { CalendarDefinition } from "@/config/calendar";
+import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Input, inputClasses } from "@/components/ui/input";
+import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import {
   fromInputValue,
   toInputValue,
@@ -38,20 +43,17 @@ export function CalendarEventForm({
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [lane, setLane] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
-  // Re-seed the fields every time the dialog opens for a different event.
   useEffect(() => {
     if (!isOpen || !event) return;
     setTitle(event.title);
     setStart(toInputValue(event.start, settings));
     setEnd(toInputValue(event.end, settings));
     setLane(event.resourceId ?? "");
+    setConfirming(false);
   }, [isOpen, event, settings]);
 
-  // CalendarKit's stylesheet is unlayered, so inside .ck-root it beats every
-  // Tailwind utility in @layer utilities: buttons turn transparent, borders
-  // disappear and the card loses its padding. Portalling to body escapes that
-  // scope completely and keeps the admin's own theme tokens.
   if (!isOpen || !event || typeof document === "undefined") return null;
 
   const allowed = (field: string) =>
@@ -74,75 +76,89 @@ export function CalendarEventForm({
 
   const remove = () => {
     if (!settings.editing.canDelete || !onDelete) return;
-    if (!window.confirm(`Delete "${event.title}"?`)) return;
-    onDelete(event.id);
-    onClose();
+    setConfirming(true);
   };
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="presentation"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit event"
-        className="w-full max-w-md rounded-lg border border-border bg-bg-elevated p-5 text-foreground shadow-lg"
+    <>
+      <ResponsiveSheet
+        open
+        onClose={onClose}
+        title="Edit event"
+        size="sm"
+        footer={
+          <>
+            {settings.editing.canDelete && (
+              <Button variant="danger" onClick={remove}>
+                Delete
+              </Button>
+            )}
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={save}>
+              Save changes
+            </Button>
+          </>
+        }
       >
-        <h2 className="mb-4 text-lg font-semibold">Edit event</h2>
-
-        {!anyField && (
-          <p className="mb-4 text-sm text-text-muted">
-            No fields are editable for this calendar. Change editing.fields in
-            config/calendar.ts.
-          </p>
-        )}
-
         <div className="space-y-4">
+          {!anyField && (
+            <p className="text-sm text-text-secondary">
+              No fields are editable for this calendar. Change editing.fields
+              in config/calendar.ts.
+            </p>
+          )}
+
           {showTitle && (
-            <label className="block text-sm">
-              <span className="mb-1 block text-text-muted">Title</span>
-              <input
-                className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
+            <div className="space-y-1.5">
+              <label htmlFor="calendar-event-title" className="block text-sm font-medium text-foreground">
+                Title
+              </label>
+              <Input
+                id="calendar-event-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-            </label>
+            </div>
           )}
 
           {showStart && (
-            <label className="block text-sm">
-              <span className="mb-1 block text-text-muted">Start</span>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="calendar-event-start" className="block text-sm font-medium text-foreground">
+                Start
+              </label>
+              <Input
+                id="calendar-event-start"
                 type="datetime-local"
-                className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
               />
-            </label>
+            </div>
           )}
 
           {showEnd && (
-            <label className="block text-sm">
-              <span className="mb-1 block text-text-muted">End</span>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="calendar-event-end" className="block text-sm font-medium text-foreground">
+                End
+              </label>
+              <Input
+                id="calendar-event-end"
                 type="datetime-local"
-                className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
               />
-            </label>
+            </div>
           )}
 
           {showLane && (
-            <label className="block text-sm">
-              <span className="mb-1 block text-text-muted">Row</span>
+            <div className="space-y-1.5">
+              <label htmlFor="calendar-event-lane" className="block text-sm font-medium text-foreground">
+                Row
+              </label>
               <select
-                className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
+                id="calendar-event-lane"
+                className={inputClasses()}
                 value={lane}
                 onChange={(e) => setLane(e.target.value)}
               >
@@ -153,41 +169,25 @@ export function CalendarEventForm({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           )}
         </div>
+      </ResponsiveSheet>
 
-        <div className="mt-6 flex items-center justify-between">
-          <div>
-            {settings.editing.canDelete && (
-              <button
-                type="button"
-                className="rounded-md px-3 py-2 text-sm text-danger hover:bg-bg-hover"
-                onClick={remove}
-              >
-                Delete
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="rounded-md border border-border px-3 py-2 text-sm hover:bg-bg-hover"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="rounded-md bg-accent px-3 py-2 text-sm text-accent-fg hover:bg-accent-hover"
-              onClick={save}
-            >
-              Save changes
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
+      <ConfirmModal
+        open={confirming}
+        variant="danger"
+        title="Delete this event?"
+        description={`${event.title} will be removed.`}
+        confirmLabel="Delete"
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          onDelete?.(event.id);
+          onClose();
+        }}
+      />
+    </>,
     document.body
   );
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2
+
+- The edit form uses the admin's own `ResponsiveSheet`, `Input`, `Button` and
+  `ConfirmModal` instead of hand-written styling, so it follows Grit's
+  desktop-sheet / mobile-sheet pattern and its theme tokens.
+- Saving and deleting now go through CalendarKit's documented `onEventUpdate`
+  and `onEventDelete` callbacks instead of diffing the whole event list.
+
 ## 0.3.1
 
 - The edit form now renders through a portal to `document.body`. CalendarKit's

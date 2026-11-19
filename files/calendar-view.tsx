@@ -80,41 +80,23 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
     [laneRows, mapping]
   );
 
-  // CalendarKit reports the whole list after every edit, move, resize and
-  // delete. Only changes to records we already have are persisted. Creation
-  // from the quick card is out of scope for this version.
-  const handleEventsChange = useCallback(
-    (next: CalendarEvent[]) => {
+  // The documented granular callbacks, rather than diffing the whole list:
+  // CalendarKit calls onEventUpdate for form saves, drags and resizes, and
+  // onEventDelete for deletes. Creation from the quick card is out of scope.
+  const handleUpdate = useCallback(
+    (next: CalendarEvent) => {
       if (!mapping || !settings.editing.canEdit) return;
-      const before = new Map(events.map((event) => [event.id, event]));
-      const updates = next.flatMap((event) => {
-        const previous = before.get(event.id);
-        if (!previous) return [];
-        const body = changedFields(event, previous, mapping);
-        return Object.keys(body).length ? [{ id: event.id, body }] : [];
-      });
-      const removed = settings.editing.canDelete
-        ? events.filter((event) => !next.some((item) => item.id === event.id))
-        : [];
+      const previous = events.find((event) => event.id === next.id);
+      if (!previous) return;
+      const body = changedFields(next, previous, mapping);
+      if (!Object.keys(body).length) return;
 
-      if (updates.length) {
-        setEventRows((rows) =>
-          rows.map((row) => {
-            const update = updates.find((u) => u.id === String(row.id));
-            return update ? { ...row, ...update.body } : row;
-          })
-        );
-      }
-      if (removed.length) {
-        const ids = new Set(removed.map((event) => event.id));
-        setEventRows((rows) => rows.filter((row) => !ids.has(String(row.id))));
-      }
-      if (!updates.length && !removed.length) return;
-
-      Promise.all([
-        ...updates.map((u) => patchEvent(u.id, u.body, mapping)),
-        ...removed.map((event) => deleteEvent(event.id, mapping)),
-      ])
+      setEventRows((rows) =>
+        rows.map((row) =>
+          String(row.id) === next.id ? { ...row, ...body } : row
+        )
+      );
+      patchEvent(next.id, body, mapping)
         .then(() =>
           queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] })
         )
@@ -123,6 +105,21 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
         );
     },
     [events, mapping, settings, queryClient]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (!mapping || !settings.editing.canDelete) return;
+      setEventRows((rows) => rows.filter((row) => String(row.id) !== id));
+      deleteEvent(id, mapping)
+        .then(() =>
+          queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] })
+        )
+        .catch((err: unknown) =>
+          setError(err instanceof Error ? err.message : "Could not delete the event")
+        );
+    },
+    [mapping, settings, queryClient]
   );
 
   const handleClick = useCallback(
@@ -164,7 +161,8 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
           view={view}
           onViewChange={setView}
           onEventClick={handleClick}
-          onEventsChange={handleEventsChange}
+          onEventUpdate={handleUpdate}
+          onEventDelete={handleDelete}
           timezone={settings.timezone}
           theme={theme}
           readOnly={!settings.editing.canEdit}
