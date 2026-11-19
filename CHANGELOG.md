@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2
+
+- `canDelete: false` now hides Delete in CalendarKit's right-click menu too,
+  not just in the plugin's edit sheet.
+- `canCreate: false` hides the floating Create button; `true` opens a create
+  sheet seeded from the clicked slot and writes the row through POST.
+- The edit form handles the create case CalendarKit passes as an event-less
+  form, so the Create button no longer opens an empty dialog.
+
 ## 0.4.1
 
 - Removed every value tied to the test project from the shipped config,

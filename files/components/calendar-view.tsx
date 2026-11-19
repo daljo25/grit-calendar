@@ -182,6 +182,7 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
   const rootClasses = [
     settings.theme === "grit" ? "calendar-grit" : "",
     settings.editing.canCreate ? "" : "calendar-no-create",
+    settings.editing.canDelete ? "" : "calendar-no-delete",
   ]
     .filter(Boolean)
     .join(" ");

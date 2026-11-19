@@ -7,10 +7,15 @@
 
 /* Two classes, not one: CalendarKit injects its own .ck-root stylesheet at
  * runtime, so equal specificity would let whichever loads last win. */
-/* No documented prop hides CalendarKit's floating Create button; readOnly
- * would also disable drag. The button is identified by the classes CalendarKit
- * gives it in 2.x, so this rule is pinned to that version. */
+/* CalendarKit has no documented prop to hide its floating Create button or
+ * the Delete item in its right-click menu. readOnly would also disable drag.
+ * The selectors use the classes CalendarKit 2.x gives those controls, so they
+ * are pinned to that version. */
 .calendar-no-create button.ck\:absolute.ck\:bottom-6.ck\:right-6.ck\:z-30 {
+  display: none;
+}
+
+.calendar-no-delete button.ck\:text-destructive {
   display: none;
 }
 

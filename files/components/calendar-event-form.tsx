@@ -33,6 +33,7 @@ export function CalendarEventForm({
   isOpen,
   onClose,
   event,
+  initialDate,
   onSave,
   onDelete,
   settings,
@@ -45,23 +46,36 @@ export function CalendarEventForm({
   const [lane, setLane] = useState("");
   const [confirming, setConfirming] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen || !event) return;
-    setTitle(event.title);
-    setStart(toInputValue(event.start, settings));
-    setEnd(toInputValue(event.end, settings));
-    setLane(event.resourceId ?? "");
-    setConfirming(false);
-  }, [isOpen, event, settings]);
+  const isNew = !event;
 
-  if (!isOpen || !event || typeof document === "undefined") return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    if (event) {
+      setTitle(event.title);
+      setStart(toInputValue(event.start, settings));
+      setEnd(toInputValue(event.end, settings));
+      setLane(event.resourceId ?? "");
+    } else {
+      // CalendarKit passes the clicked slot as initialDate for a new event.
+      const from = initialDate ?? new Date();
+      setTitle("");
+      setStart(toInputValue(from, settings));
+      setEnd(toInputValue(new Date(from.getTime() + 3600000), settings));
+      setLane("");
+    }
+    setConfirming(false);
+  }, [isOpen, event, initialDate, settings]);
+
+  if (!isOpen || typeof document === "undefined") return null;
 
   const allowed = (field: string) =>
     settings.editing.canEdit && settings.editing.fields.includes(field);
-  const showTitle = allowed(settings.event.titleField);
-  const showStart = allowed(settings.event.startField);
-  const showEnd = allowed(settings.event.endField);
-  const showLane = allowed(settings.lane.foreignKey);
+  // A new event always needs a title and a time, even when editing.fields is
+  // narrow. The field list controls what may be changed on an existing row.
+  const showTitle = isNew || allowed(settings.event.titleField);
+  const showStart = isNew || allowed(settings.event.startField);
+  const showEnd = isNew || allowed(settings.event.endField);
+  const showLane = isNew || allowed(settings.lane.foreignKey);
   const anyField = showTitle || showStart || showEnd || showLane;
 
   const save = () => {
@@ -75,7 +89,7 @@ export function CalendarEventForm({
   };
 
   const remove = () => {
-    if (!settings.editing.canDelete || !onDelete) return;
+    if (isNew || !settings.editing.canDelete || !onDelete) return;
     setConfirming(true);
   };
 
@@ -84,11 +98,11 @@ export function CalendarEventForm({
       <ResponsiveSheet
         open
         onClose={onClose}
-        title="Edit event"
+        title={isNew ? "New event" : "Edit event"}
         size="sm"
         footer={
           <>
-            {settings.editing.canDelete && (
+            {!isNew && settings.editing.canDelete && (
               <Button variant="danger" onClick={remove}>
                 Delete
               </Button>
@@ -178,12 +192,12 @@ export function CalendarEventForm({
         open={confirming}
         variant="danger"
         title="Delete this event?"
-        description={`${event.title} will be removed.`}
+        description={`${event?.title ?? "This event"} will be removed.`}
         confirmLabel="Delete"
         onCancel={() => setConfirming(false)}
         onConfirm={() => {
           setConfirming(false);
-          onDelete?.(event.id);
+          onDelete?.(event?.id ?? "");
           onClose();
         }}
       />
