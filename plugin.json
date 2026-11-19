@@ -247,18 +247,6 @@
       }
     },
     {
-      "from": "files/shared/__tests__/calendar-data.test.ts",
-      "to": "apps/admin/src/__tests__/calendar-data.test.ts",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
       "from": "files/next/__tests__/calendar-create-intent.test.tsx",
       "to": "apps/admin/__tests__/calendar-create-intent.test.tsx",
       "when": {
@@ -271,18 +259,6 @@
       }
     },
     {
-      "from": "files/tanstack/__tests__/calendar-create-intent.test.tsx",
-      "to": "apps/admin/src/__tests__/calendar-create-intent.test.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
       "from": "files/shared/__tests__/calendar-event-form.test.tsx",
       "to": "apps/admin/__tests__/calendar-event-form.test.tsx",
       "when": {
@@ -291,18 +267,6 @@
         ],
         "frontend": [
           "next"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/__tests__/calendar-event-form.test.tsx",
-      "to": "apps/admin/src/__tests__/calendar-event-form.test.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
         ]
       }
     }

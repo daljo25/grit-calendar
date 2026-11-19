@@ -10,14 +10,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The supported shape, and one the plugin must leave untouched. The
-        # second is what catches an injection that lost its `when` clause:
-        # install would fail on a missing admin file, or write one nobody reads.
+        # The two supported admin shapes, plus one the plugin must leave
+        # untouched. The last is what catches an injection that lost its
+        # `when` clause: install would fail on a missing admin file, or write
+        # one nobody reads.
         include:
           - arch: "--triple --next"
-            frontend: true
+            typecheck: "npx tsc --noEmit"
+            tests: "__tests__/calendar-*.test.*"
+          - arch: "--triple --vite"
+            # A Vite admin generates its route tree, so tsc knows nothing
+            # about its routes until `tsr generate` has run, and generation is
+            # also where a route file whose path disagrees with its URL fails.
+            # Unused-symbol errors are switched off because the scaffold ships
+            # several of its own, which have nothing to do with the plugin.
+            typecheck: "pnpm exec tsr generate && npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false"
           - arch: "--api"
-            frontend: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,6 +34,16 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
+
+      # The toolchain comes before the scaffold: a Vite project is created with
+      # a package.json the scaffold itself writes, and anything that reaches
+      # for pnpm there fails in a way that looks like a plugin problem.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
       - name: Install the Grit CLI
         run: go install github.com/MUKE-coder/grit/v3/cmd/grit@latest
@@ -42,7 +60,7 @@ jobs:
         run: go build ./...
 
       - name: An API-only project gets no admin files
-        if: ${{ !matrix.frontend }}
+        if: ${{ !matrix.typecheck }}
         working-directory: testbed
         run: |
           if find . -name '*calendar*' -not -path './.git/*' | grep -q .; then
@@ -50,28 +68,23 @@ jobs:
             exit 1
           fi
 
-      - uses: pnpm/action-setup@v4
-        if: matrix.frontend
-        with:
-          version: 10.33.4
-      - uses: actions/setup-node@v4
-        if: matrix.frontend
-        with:
-          node-version: "22"
-
       - name: The admin type-checks
-        if: matrix.frontend
+        if: matrix.typecheck
         working-directory: testbed
         run: |
           pnpm install
-          cd apps/admin && npx tsc --noEmit
+          cd apps/admin
+          ${{ matrix.typecheck }}
 
       # The shell script checks install and removal. These check the mapping,
-      # timezone and write-back rules that a grep cannot see.
-      - name: The calendar data helpers behave as configured
-        if: matrix.frontend
+      # timezone and write-back rules that a grep cannot see, plus the two
+      # flows that regressed most: ?action=create and the delete confirmation.
+      # They belong to the Next admin: the Vite one's vitest config points "@"
+      # at the app root, so a test importing app code cannot resolve there.
+      - name: The plugin's tests pass
+        if: matrix.tests
         working-directory: testbed/apps/admin
-        run: pnpm exec vitest run __tests__/calendar-data.test.ts
+        run: pnpm exec vitest run ${{ matrix.tests }}
 
       # Removal replays the lockfile, so it cannot take back an edit the
       # lockfile has no record of. This build is where that shows up.

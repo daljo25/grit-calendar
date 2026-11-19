@@ -121,6 +121,11 @@ Two consequences worth knowing before editing:
   planned for a later version. Half of it is cheap when it comes: CalendarKit
   takes a `translations` object of its own, so the library's labels are a small
   addition next to the plugin's.
+- The plugin's tests run in the Next.js admin only. A Vite admin's
+  `vitest.config.ts` points `@` at the app root rather than `src/`, so any test
+  that imports app code fails to resolve; Grit's own scaffold skips its
+  component tests there for the same reason. The Vite shape is still covered by
+  installation, type-checking and route generation in CI.
 - Each lane header shows `ID: <record id>` under its label. That line is
   hardcoded in CalendarKit 2.0.0 and its `translations.idLabel` falls back to
   the same text when empty (`translations?.idLabel || "ID: {id}"`), so there is
@@ -144,8 +149,12 @@ GRIT_BIN=/tmp/grit ./tests/verify.sh
 ```
 
 The script scaffolds triple Next and triple Vite projects, installs the plugin,
-checks the files and injections, removes it and checks again. CI also runs
-`tsc --noEmit` and the component tests in the generated admin.
+checks the files and injections, removes it and checks again.
+
+CI runs three shapes: triple Next, triple Vite and an API-only project that must
+stay untouched. Both admins are type-checked, with the Vite one generating its
+TanStack route tree first, since a route that disagrees with its path only fails
+there. The component tests run in the Next admin.
 
 ## License
 

@@ -15,7 +15,10 @@ First publishable beta. No behaviour changed since 0.4.4.
   removes the `-tanstack` filename suffix and makes every `from` derivable from
   its `to`. The manifest still lists a shared file twice, once per frontend.
 - Component tests for `?action=create`, the edit sheet's field allowlist and
-  the delete confirmation. 15 tests pass in each supported architecture.
+  the delete confirmation: 15 tests, in the Next.js admin. The Vite admin gets
+  none, and cannot: its `vitest.config.ts` points `@` at the app root instead
+  of `src/`, so a test importing app code fails to resolve. Grit's own scaffold
+  skips its component tests there for the same reason.
 - README rewritten for a public release, including limitations and i18n being
   deferred to a later version.
 
