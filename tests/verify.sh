@@ -25,7 +25,11 @@ git -c user.name=verify -c user.email=verify@example.com commit -qm init
 
 CONFIG='apps/admin/config/calendar.ts'
 DATA='apps/admin/components/calendar/calendar-data.ts'
+FORM='apps/admin/components/calendar/calendar-event-form.tsx'
+VIEW='apps/admin/components/calendar/calendar-view.tsx'
 PAGE='apps/admin/app/(dashboard)/calendar/page.tsx'
+IDPAGE='apps/admin/app/(dashboard)/calendar/[id]/page.tsx'
+TEST='apps/admin/__tests__/calendar-data.test.ts'
 WIDGET='apps/admin/components/calendar/calendar-widget.tsx'
 CSS='apps/admin/components/calendar/calendar.css'
 SIDEBAR='apps/admin/components/chrome/CollapsibleSidebar.tsx'
@@ -33,14 +37,14 @@ ICONS='apps/admin/lib/icons.ts'
 CATALOG='apps/admin/lib/dashboard-catalog.ts'
 DASHBOARD='apps/admin/app/(dashboard)/dashboard/page.tsx'
 
-for file in "$CONFIG" "$DATA" "$PAGE" "$WIDGET" "$CSS"; do
+for file in "$CONFIG" "$DATA" "$FORM" "$VIEW" "$PAGE" "$IDPAGE" "$TEST" "$WIDGET" "$CSS"; do
   test -f "$file" || { echo "missing $file" >&2; exit 1; }
 done
 
 grep -q 'timezone: "UTC"' "$CONFIG"
 grep -q 'theme: "grit"' "$CONFIG"
-grep -q 'href: "/calendar"' "$CONFIG"
-grep -q '\.\.\.CALENDAR_NAV' "$SIDEBAR"
+grep -q 'canDelete: false' "$CONFIG"
+grep -q '...CALENDAR_NAV' "$SIDEBAR"
 grep -q 'CalendarDays' "$ICONS"
 grep -q 'system:calendar' "$CATALOG"
 grep -q 'CalendarWidget' "$DASHBOARD"
@@ -50,7 +54,7 @@ grep -q 'calendarkit-pro' apps/admin/package.json
 
 "$BIN" plugin remove calendar --force
 
-for file in "$CONFIG" "$DATA" "$PAGE" "$WIDGET" "$CSS"; do
+for file in "$CONFIG" "$DATA" "$FORM" "$VIEW" "$PAGE" "$IDPAGE" "$TEST" "$WIDGET" "$CSS"; do
   test ! -f "$file" || { echo "removal left $file behind" >&2; exit 1; }
 done
 if grep -q 'CALENDAR_NAV' "$SIDEBAR"; then

@@ -1,8 +1,8 @@
 {
   "name": "calendar",
-  "version": "0.2.1",
-  "summary": "Resource calendar and dashboard widget for Grit, powered by CalendarKit Pro",
-  "description": "Adds a /calendar page and an optional dashboard widget. One generated resource supplies the events through a datetime field; a second supplies the rows through a relationship field. Click to open a record, drag to change its date and row. All settings live in apps/admin/config/calendar.ts.",
+  "version": "0.3.0",
+  "summary": "Multiple resource calendars and dashboard widget for Grit, powered by CalendarKit Pro",
+  "description": "Adds /calendar and /calendar/<id> pages plus an optional dashboard widget. Each calendar reads two generated resources: one with a datetime field for the events, one linked by a relationship field for the rows. The edit form is built from the resource fields listed in apps/admin/config/calendar.ts, with configurable delete and click behaviour.",
   "requires": [],
   "goDeps": [],
   "nodeDeps": [
@@ -10,8 +10,8 @@
   ],
   "nextSteps": [
     "pnpm install",
-    "Edit apps/admin/config/calendar.ts: slugs, sidebar label, icon, timezone and theme",
-    "Open /calendar, or the widget on /dashboard"
+    "Edit apps/admin/config/calendar.ts: calendars, slugs, sidebar, widget, timezone, theme and editable fields",
+    "Open /calendar, or /calendar/<id> for the other entries in CALENDARS"
   ],
   "files": [
     {
@@ -25,8 +25,23 @@
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {
+      "from": "files/calendar-event-form.tsx",
+      "to": "apps/admin/components/calendar/calendar-event-form.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar-view.tsx",
+      "to": "apps/admin/components/calendar/calendar-view.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
       "from": "files/calendar-page.tsx",
       "to": "apps/admin/app/(dashboard)/calendar/page.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar-id-page.tsx",
+      "to": "apps/admin/app/(dashboard)/calendar/[id]/page.tsx",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {
@@ -37,6 +52,11 @@
     {
       "from": "files/calendar.css",
       "to": "apps/admin/components/calendar/calendar.css",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar-data.test.ts",
+      "to": "apps/admin/__tests__/calendar-data.test.ts",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     }
   ],
@@ -50,7 +70,7 @@
     {
       "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
       "marker": "// grit:nav:content",
-      "code": "  { ...CALENDAR_NAV, adminOnly: false },",
+      "code": "  ...CALENDAR_NAV,",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {

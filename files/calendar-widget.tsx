@@ -1,14 +1,14 @@
 "use client";
 
-// Dashboard widget for grit-calendar. Enabled and tuned from config/calendar.ts.
-// It shows the next few events so the calendar is reachable without leaving the
-// dashboard, and never renders at all when widget.enabled is false.
+// Dashboard widget for grit-calendar. It shows the next events from every
+// calendar whose widget.enabled is true, so one admin can serve admins and
+// members from one feed. Enabled, titled and sized from config/calendar.ts.
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarEvent } from "calendarkit-pro";
 
-import { CALENDAR_CONFIG } from "@/config/calendar";
+import { CALENDARS, CALENDAR_NAV, type CalendarDefinition } from "@/config/calendar";
 import {
   detailHref,
   formatTime,
@@ -21,74 +21,94 @@ import {
 interface Upcoming {
   event: CalendarEvent;
   laneLabel: string;
+  calendarLabel: string;
+  href: string;
+  mapping: Mapping;
+  settings: CalendarDefinition;
 }
 
 export function CalendarWidget() {
-  const [mapping, setMapping] = useState<Mapping | null>(null);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [laneLabels, setLaneLabels] = useState<Record<string, string>>({});
+  const [upcoming, setUpcoming] = useState<Upcoming[]>([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    if (!CALENDAR_CONFIG.widget.enabled) return;
-    const found = resolveMapping();
-    if (!found) return;
-    setMapping(found);
-    Promise.all([readRows(found.eventResource), readRows(found.laneResource)])
-      .then(([eventRows, laneRows]) => {
+    const active = CALENDARS.map((settings, index) => ({
+      settings,
+      nav: CALENDAR_NAV[index],
+    })).filter((item) => item.settings.widget.enabled);
+    if (!active.length) return;
+
+    setTitle(active[0].settings.widget.title);
+    Promise.all(
+      active.map(async ({ settings, nav }) => {
+        const mapping = resolveMapping(settings);
+        if (!mapping) return [] as Upcoming[];
+        const [eventRows, laneRows] = await Promise.all([
+          readRows(mapping.eventResource, settings),
+          readRows(mapping.laneResource, settings),
+        ]);
         const labels: Record<string, string> = {};
         for (const row of laneRows)
-          labels[String(row.id)] = String(row[found.laneLabelField] ?? `Row ${row.id}`);
-        setLaneLabels(labels);
-        setEvents(toEvents(eventRows, found));
+          labels[String(row.id)] = String(row[mapping.laneLabelField] ?? `Row ${row.id}`);
+        return toEvents(eventRows, mapping).map((event) => ({
+          event,
+          laneLabel: event.resourceId ? labels[event.resourceId] || "" : "",
+          calendarLabel: nav.label,
+          href: nav.href,
+          mapping,
+          settings,
+        }));
       })
-      .catch(() => setEvents([]));
+    )
+      .then((groups) => groups.flat())
+      .then((rows) => setUpcoming(rows))
+      .catch(() => setUpcoming([]));
   }, []);
 
-  const upcoming = useMemo<Upcoming[]>(() => {
+  const items = useMemo(() => {
     const now = Date.now();
     const limit = now + 30 * 24 * 3600 * 1000;
-    return events
-      .filter((event) => event.start.getTime() >= now && event.start.getTime() <= limit)
-      .sort((a, b) => a.start.getTime() - b.start.getTime())
-      .slice(0, CALENDAR_CONFIG.widget.max)
-      .map((event) => ({
-        event,
-        laneLabel: event.resourceId ? laneLabels[event.resourceId] || "" : "",
-      }));
-  }, [events, laneLabels]);
+    const max = CALENDARS.find((c) => c.widget.enabled)?.widget.max ?? 5;
+    return upcoming
+      .filter((item) => item.event.start.getTime() >= now && item.event.start.getTime() <= limit)
+      .sort((a, b) => a.event.start.getTime() - b.event.start.getTime())
+      .slice(0, max);
+  }, [upcoming]);
 
-  if (!CALENDAR_CONFIG.widget.enabled || !mapping || !upcoming.length) return null;
+  if (!items.length || !title) return null;
 
   return (
     <div className="mt-8 rounded-lg border border-border bg-bg-secondary p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-          {CALENDAR_CONFIG.widget.title}
+          {title}
         </h2>
-        <Link
-          href={CALENDAR_CONFIG.nav.href}
-          className="text-xs text-accent hover:underline"
-        >
+        <Link href="/calendar" className="text-xs text-accent hover:underline">
           Open calendar
         </Link>
       </div>
       <ul className="divide-y divide-border">
-        {upcoming.map(({ event, laneLabel }) => (
-          <li key={event.id} className="flex items-center gap-3 py-2 text-sm">
-            <span className="w-12 shrink-0 font-mono text-xs text-muted">
-              {formatTime(event.start)}
-            </span>
-            <a
-              href={detailHref(mapping, event.id)}
-              className="flex-1 truncate text-foreground hover:text-accent"
-            >
-              {event.title}
-            </a>
-            {laneLabel && (
-              <span className="max-w-[10rem] truncate text-xs text-muted">{laneLabel}</span>
-            )}
-          </li>
-        ))}
+        {items.map(({ event, laneLabel, calendarLabel, href, mapping, settings }) => {
+          return (
+            <li key={`${calendarLabel}:${event.id}`} className="flex items-center gap-3 py-2 text-sm">
+              <span className="w-12 shrink-0 font-mono text-xs text-muted">
+                {formatTime(event.start, settings)}
+              </span>
+              <a
+                href={detailHref(mapping, event.id)}
+                className="flex-1 truncate text-foreground hover:text-accent"
+              >
+                {event.title}
+              </a>
+              {laneLabel && (
+                <span className="max-w-[10rem] truncate text-xs text-muted">{laneLabel}</span>
+              )}
+              <Link href={href} className="text-[11px] text-accent hover:underline">
+                {calendarLabel}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

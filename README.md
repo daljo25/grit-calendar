@@ -1,22 +1,22 @@
 # grit-calendar
 
-A community plugin for Grit. It installs a `/calendar` screen and an optional
-dashboard widget, using [CalendarKit Pro](https://calendarkit.io/) (MIT) for the
-views, the time grid and drag and drop.
+A community plugin for Grit. It installs one or more resource calendars plus an
+optional dashboard widget, using [CalendarKit Pro](https://calendarkit.io/)
+(MIT) for the views, the time grid and drag and drop.
 
-The plugin reads two generated resources:
+Each calendar reads two generated resources:
 
 - the **event** resource supplies the events from a `datetime` field;
 - the **row** resource supplies the lanes through a relationship field on the
   event (rooms, people, equipment).
 
 Click an event opens its record page. Dragging it to another row or time writes
-a `PATCH` to the generated resource endpoint. Editing a title in CalendarKit's
-card also writes through, and invalidates the resource's query cache so the
-admin table shows the new value.
+a `PATCH` to the generated resource endpoint. Editing in the calendar uses a
+form built only from the resource fields you allow, so CalendarKit's generic
+Location, Guests, Reminders and Description fields never appear.
 
 The repository was started with `grit plugin new calendar` and keeps that
-workflow: install into a fresh project, type-check, remove, build again.
+workflow, with a Vitest step added for the data helpers.
 
 ## Install
 
@@ -27,44 +27,28 @@ pnpm install
 
 ## Configuration
 
-Everything is in **`apps/admin/config/calendar.ts`**, written by the plugin. Edit
-that one file, save, and Next hot-reloads. No reinstall is needed.
+Everything is in **`apps/admin/config/calendar.ts`**, written by the plugin. It
+is documented line by line with the options and default of every setting. Edit
+a value, save, and Next hot-reloads. Reinstalling is never needed.
 
-```ts
-export const CALENDAR_CONFIG: CalendarSettings = {
-  nav: { label: "Calendar", iconKey: "CalendarDays", href: "/calendar" },
-  widget: { enabled: true, title: "Next appointments", max: 5 },
-  event: {
-    slug: "",          // e.g. "appointments"
-    titleField: "title",
-    startField: "starts_at",
-    endField: "ends_at",
-    pageSize: 500,
-  },
-  lane: {
-    slug: "",          // e.g. "rooms"
-    labelField: "name",
-    foreignKey: "room_id",
-  },
-  timezone: "UTC",
-  theme: "grit",
-};
-```
+`CALENDARS` is an array so one install can serve, for example, a calendar for
+admins and another for members. The first entry keeps `/calendar`; every other
+entry is at `/calendar/<id>`. The sidebar and the widget are derived from the
+same array.
 
 | Setting | What it does |
 |---|---|
-| `nav.label`, `nav.href` | Sidebar text and URL, read by the nav injection |
-| `nav.iconKey` | Icon name. It must exist in `lib/icons.ts`; `CalendarDays` is injected by default |
-| `widget.enabled` | Show or hide the dashboard widget |
-| `widget.title`, `widget.max` | Widget heading and number of upcoming events |
-| `event.slug`, `lane.slug` | The two resources. Empty means auto-detect |
+| `id` | URL segment for `/calendar/<id>`; the first entry is `/calendar` |
+| `nav.label`, `nav.iconKey`, `nav.adminOnly`, `nav.requires` | Sidebar link and its visibility |
+| `widget.enabled`, `widget.title`, `widget.max` | Dashboard feed of upcoming events |
+| `event.slug`, `lane.slug` | The two resources; empty means auto-detect |
 | `event.*Field`, `lane.*Field` | Field names used to map records to events and rows |
-| `timezone` | IANA zone. `UTC` makes a 09:00 database value show as 09:00 |
-| `theme` | `"grit"` follows the admin's theme tokens; `calm`, `vivid` and `editorial` are CalendarKit presets |
-
-Auto-detection, when the slugs are empty, takes the first resource with a
-`datetime` field as the event resource and the resource named by its first
-`relationship-select` as the row resource.
+| `editing.canEdit` | `false` makes the calendar read only, including drag |
+| `editing.canDelete` | `false` hides Delete; `true` asks for confirmation and deletes |
+| `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "room_id"]` |
+| `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the form |
+| `timezone` | IANA zone; `UTC` keeps a 09:00 database value at 09:00 |
+| `theme` | `"grit"` follows the admin's theme tokens; other values are CalendarKit presets |
 
 Example resources:
 
@@ -76,19 +60,16 @@ grit generate resource Appointment \
 
 ## Supported projects
 
-Version 0.2.0 targets a **triple** project with a **Next.js** admin. A community
-plugin manifest has static project paths and no admin-root placeholder, so every
-file and injection carries `when: { architecture: ["triple"], frontend:
-["next"] }`. On other shapes the plugin writes nothing. A community manifest has
-no preflight hook, so this is a no-op rather than a loud refusal.
+Version 0.3.0 targets a **triple** project with a **Next.js** admin. A community
+plugin manifest has static project paths and no admin-root placeholder, so
+every file and injection carries `when: { architecture: ["triple"], frontend:
+["next"] }`. On other shapes the plugin writes nothing.
 
-Adding `{{ADMIN_ROOT}}` to the manifest is the prerequisite for double, single
-and TanStack projects.
+## Out of scope
 
-## Out of scope in 0.2.0
-
-Creating and deleting events from CalendarKit's quick card is not persisted.
-Only changes to records that already exist are written back.
+Creating events from CalendarKit's quick card is not persisted. Only changes
+and deletions of records that already exist are written back, and deletions
+only when `editing.canDelete` is true.
 
 ## Verification
 
@@ -98,5 +79,6 @@ GRIT_BIN=/tmp/grit ./tests/verify.sh
 ```
 
 The script scaffolds a fresh project, installs the plugin, checks the files and
-injections, builds the API, removes the plugin and builds again. Removal matters
-as much as install: it replays the lockfile backwards.
+injections, builds the API, removes the plugin and builds again. CI also runs
+`tsc --noEmit` and `vitest run __tests__/calendar-data.test.ts` in the generated
+admin.

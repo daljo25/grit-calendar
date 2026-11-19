@@ -66,6 +66,13 @@ jobs:
           pnpm install
           cd apps/admin && npx tsc --noEmit
 
+      # The shell script checks install and removal. These check the mapping,
+      # timezone and write-back rules that a grep cannot see.
+      - name: The calendar data helpers behave as configured
+        if: matrix.frontend
+        working-directory: testbed/apps/admin
+        run: pnpm exec vitest run __tests__/calendar-data.test.ts
+
       # Removal replays the lockfile, so it cannot take back an edit the
       # lockfile has no record of. This build is where that shows up.
       - name: Remove it, and the project still builds

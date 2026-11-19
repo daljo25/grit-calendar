@@ -1,13 +1,13 @@
 // Shared data layer for the calendar page and the dashboard widget.
 //
-// Both screens need the same four things: resolve which resources are the
-// events and the rows, fetch them, turn them into CalendarKit shapes, and write
-// a move back. Keeping that here means a change to the mapping applies to both
-// instead of drifting between a page and a widget.
+// Both screens need the same things: resolve which resources are the events
+// and the rows, fetch them, turn them into CalendarKit shapes, and write a
+// change back. Keeping that here means every calendar in CALENDARS gets the
+// same behaviour instead of drifting between a page and a widget.
 
-import { CALENDAR_CONFIG } from "@/config/calendar";
 import { apiClient } from "@/lib/api-client";
 import { resources } from "@/resources";
+import type { CalendarDefinition } from "@/config/calendar";
 import type { ResourceDefinition } from "@/lib/resource";
 import type { CalendarEvent, Resource } from "calendarkit-pro";
 
@@ -25,27 +25,27 @@ export interface Mapping {
 
 /**
  * The configured resources, inferred from the admin's own registry when the
- * slugs are left empty. An explicit slug whose resource is missing is an error
+ * slugs are empty. An explicit slug whose resource is missing is an error
  * rather than a guess: silent fallback hides a typo in config/calendar.ts.
  */
-export function resolveMapping(): Mapping | null {
-  const cfg = CALENDAR_CONFIG;
-  const eventResource = cfg.event.slug
-    ? resources.find((r) => r.slug === cfg.event.slug)
+export function resolveMapping(settings: CalendarDefinition): Mapping | null {
+  const eventResource = settings.event.slug
+    ? resources.find((r) => r.slug === settings.event.slug)
     : resources.find((r) =>
         r.form?.fields?.some((f) => f.type === "datetime")
       );
   if (!eventResource) return null;
 
-  const startField = cfg.event.slug
-    ? cfg.event.startField
-    : eventResource.form.fields.find((f) => f.type === "datetime")?.key ?? cfg.event.startField;
+  const startField = settings.event.slug
+    ? settings.event.startField
+    : eventResource.form.fields.find((f) => f.type === "datetime")?.key ??
+      settings.event.startField;
   const relation = eventResource.form.fields.find(
     (f) => f.type === "relationship-select" && f.relatedEndpoint
   );
 
-  const laneResource = cfg.lane.slug
-    ? resources.find((r) => r.slug === cfg.lane.slug)
+  const laneResource = settings.lane.slug
+    ? resources.find((r) => r.slug === settings.lane.slug)
     : relation
       ? resources.find((r) => r.endpoint === relation.relatedEndpoint)
       : undefined;
@@ -54,19 +54,24 @@ export function resolveMapping(): Mapping | null {
   return {
     eventResource,
     laneResource,
-    titleField: cfg.event.titleField,
+    titleField: settings.event.titleField,
     startField,
-    endField: cfg.event.endField,
-    laneField: cfg.lane.slug ? cfg.lane.foreignKey : relation?.key ?? cfg.lane.foreignKey,
-    laneLabelField: cfg.lane.slug
-      ? cfg.lane.labelField
-      : relation?.displayField || cfg.lane.labelField,
+    endField: settings.event.endField,
+    laneField: settings.lane.slug
+      ? settings.lane.foreignKey
+      : relation?.key ?? settings.lane.foreignKey,
+    laneLabelField: settings.lane.slug
+      ? settings.lane.labelField
+      : relation?.displayField || settings.lane.labelField,
   };
 }
 
-export async function readRows(resource: ResourceDefinition): Promise<Row[]> {
+export async function readRows(
+  resource: ResourceDefinition,
+  settings: CalendarDefinition
+): Promise<Row[]> {
   const response = await apiClient.get(resource.endpoint, {
-    params: { page_size: CALENDAR_CONFIG.event.pageSize },
+    params: { page_size: settings.event.pageSize },
   });
   const body = response.data;
   const rows = Array.isArray(body) ? body : body?.data;
@@ -123,7 +128,6 @@ export function changedFields(
   return body;
 }
 
-/** PATCH one event. The API's generated PATCH route accepts a partial body. */
 export function patchEvent(
   id: string,
   body: Record<string, unknown>,
@@ -132,12 +136,43 @@ export function patchEvent(
   return apiClient.patch(`${mapping.eventResource.endpoint}/${id}`, body);
 }
 
+export function deleteEvent(id: string, mapping: Mapping): Promise<unknown> {
+  return apiClient.delete(`${mapping.eventResource.endpoint}/${id}`);
+}
+
+/** `datetime-local` value (YYYY-MM-DDTHH:mm) in the configured timezone. */
+export function toInputValue(date: Date, settings: CalendarDefinition): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: settings.timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(date)
+    .replace(" ", "T");
+}
+
+/** Inverse of toInputValue, including the zone's offset at that date. */
+export function fromInputValue(
+  value: string,
+  settings: CalendarDefinition
+): Date {
+  const utcGuess = new Date(`${value}:00Z`);
+  if (Number.isNaN(utcGuess.getTime())) return new Date(value);
+  const wallInZone = toInputValue(utcGuess, settings);
+  const offset = new Date(`${wallInZone}:00Z`).getTime() - utcGuess.getTime();
+  return new Date(utcGuess.getTime() - offset);
+}
+
 /** A human time in the configured timezone, for the widget's list. */
-export function formatTime(date: Date): string {
+export function formatTime(date: Date, settings: CalendarDefinition): string {
   return new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: CALENDAR_CONFIG.timezone,
+    timeZone: settings.timezone,
   }).format(date);
 }
 

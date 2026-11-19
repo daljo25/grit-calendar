@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0
+
+- Multiple calendars: `CALENDARS` is an array. The first entry owns `/calendar`,
+  the rest live at `/calendar/<id>`, and the sidebar gets one link per entry.
+- The dashboard widget combines the upcoming events of every enabled calendar,
+  each labelled with its own calendar name.
+- Replaced CalendarKit's generic edit card with a form built from the resource
+  fields listed in `editing.fields`. Location, Guests, Reminders and
+  Description no longer appear. `editing.canDelete` defaults to false and
+  hides Delete; on true it asks for confirmation and issues a real DELETE.
+- `editing.canEdit: false` makes a calendar read only, and
+  `editing.openOnClick` chooses between the record page and the edit form.
+- Added Vitest coverage for the data helpers: event mapping, one-hour fallback,
+  changed fields, UTC wall-clock round trip and detail URLs.
+
 ## 0.2.1
 
 - `config/calendar.ts` is now documented line by line: every setting names its
