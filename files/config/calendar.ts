@@ -14,7 +14,7 @@
  * per entry, so removing an entry from this array removes its link too.
  *
  * How the two resources fit together:
- *   event resource (appointments) -> lane resource (rooms)
+ *   event resource (bookings) -> lane resource (lanes)
  *   each event row carries a datetime and a field pointing at a lane row.
  *
  * Leave a slug empty to let the plugin infer it from the admin's own resource
@@ -49,7 +49,7 @@ export const CALENDARS: CalendarDefinition[] = [
   {
     // Unique id. Used as the URL segment /calendar/<id> for every calendar
     // after the first. Lowercase and hyphenated, like a resource slug.
-    id: "appointments",
+    id: "default",
 
     // Sidebar entry for this calendar. Read by the nav injection, so this is
     // the only place to change label, icon and who sees the link.
@@ -70,7 +70,7 @@ export const CALENDARS: CalendarDefinition[] = [
       // true hides the link from non-admins. The API still enforces access.
       adminOnly: false,
 
-      // Optional permission, e.g. "appointments.view". The sidebar hides the
+      // Optional permission, e.g. "bookings.view". The sidebar hides the
       // link for readers without it; the API is the real gate. Omit to show
       // the link to everybody who passes adminOnly.
       requires: undefined,
@@ -85,7 +85,7 @@ export const CALENDARS: CalendarDefinition[] = [
       enabled: true,
 
       // Heading of the tile on /dashboard. Free string.
-      title: "Next appointments",
+      title: "Upcoming events",
 
       // Maximum number of rows in the tile, positive integer. The window is
       // fixed at 30 days, so a small number here does not widen it.
@@ -127,10 +127,10 @@ export const CALENDARS: CalendarDefinition[] = [
       // displayField wins over this value.
       labelField: "name",
 
-      // Field on the event row pointing at a lane. In auto-detect this comes
-      // from the relationship-select key. Dragging an event to another lane
-      // writes the new id here through PATCH.
-      foreignKey: "room_id",
+      // Field on the event row pointing at a lane. "" means auto-detect from
+      // the relationship-select key; set a real field name when lane.slug is
+      // explicit. Dragging writes the new id here through PATCH.
+      foreignKey: "",
     },
 
     // What a reader may change from this calendar. CalendarKit's own edit
@@ -155,10 +155,10 @@ export const CALENDARS: CalendarDefinition[] = [
 
       // Resource field keys the edit form is allowed to change. Values can be
       // event.titleField, event.startField, event.endField and lane.foreignKey.
-      // Any other string is ignored. Defaults to date, time and row for the
-      // generated Room/Appointment example. Add "title" to edit the name here.
-      // Keep in sync if you rename a field above.
-      fields: ["starts_at", "ends_at", "room_id"],
+      // Any other string is ignored. Defaults to the two date fields. Add
+      // "title" to edit the name and lane.foreignKey to move rows. Keep in
+      // sync if you rename a field above.
+      fields: ["starts_at", "ends_at"],
 
       // "detail" | "edit", default "detail". Clicking an event either opens
       // its generated record page or opens the edit form above. Dragging is

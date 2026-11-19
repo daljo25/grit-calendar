@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1
+
+- Removed every value tied to the test project from the shipped config,
+  comments, examples and test fixtures. The default `id` is `default`, the
+  widget title is generic, `lane.foreignKey` is empty and auto-detected, and
+  the documented resource pair is `Booking`/`Lane`.
+- The mapping resolves an empty field name from the resource definition, so an
+  explicit slug with an empty field still works instead of writing to a `""`
+  key.
+
 ## 0.4.0
 
 - `editing.canCreate` hides CalendarKit's floating Create button. On true, a

@@ -36,10 +36,10 @@ export function resolveMapping(settings: CalendarDefinition): Mapping | null {
       );
   if (!eventResource) return null;
 
-  const startField = settings.event.slug
-    ? settings.event.startField
-    : eventResource.form.fields.find((f) => f.type === "datetime")?.key ??
-      settings.event.startField;
+  const startField =
+    settings.event.startField ||
+    eventResource.form.fields.find((f) => f.type === "datetime")?.key ||
+    "";
   const relation = eventResource.form.fields.find(
     (f) => f.type === "relationship-select" && f.relatedEndpoint
   );
@@ -54,15 +54,12 @@ export function resolveMapping(settings: CalendarDefinition): Mapping | null {
   return {
     eventResource,
     laneResource,
-    titleField: settings.event.titleField,
+    titleField: settings.event.titleField || "title",
     startField,
     endField: settings.event.endField,
-    laneField: settings.lane.slug
-      ? settings.lane.foreignKey
-      : relation?.key ?? settings.lane.foreignKey,
-    laneLabelField: settings.lane.slug
-      ? settings.lane.labelField
-      : relation?.displayField || settings.lane.labelField,
+    laneField: settings.lane.foreignKey || relation?.key || "",
+    laneLabelField:
+      settings.lane.labelField || relation?.displayField || "name",
   };
 }
 

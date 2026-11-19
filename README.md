@@ -46,7 +46,7 @@ same array.
 | `editing.canEdit` | `false` makes the calendar read only, including drag |
 | `editing.canCreate` | `false` hides CalendarKit's floating Create button; `true` writes a row on quick create |
 | `editing.canDelete` | `false` hides Delete; `true` asks for confirmation and deletes |
-| `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "room_id"]` |
+| `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "lane_id"]` |
 | `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the form |
 | `timezone` | IANA zone; `UTC` keeps a 09:00 database value at 09:00 |
 | `theme` | `"grit"` follows the admin's theme tokens; other values are CalendarKit presets |
@@ -54,9 +54,9 @@ same array.
 Example resources:
 
 ```bash
-grit generate resource Room --fields 'name:string'
-grit generate resource Appointment \
-  --fields 'title:string,starts_at:datetime,ends_at:datetime,room:belongs_to[Room]'
+grit generate resource Lane --fields 'name:string'
+grit generate resource Booking \
+  --fields 'title:string,starts_at:datetime,ends_at:datetime,lane:belongs_to[Lane]'
 ```
 
 ## Supported projects

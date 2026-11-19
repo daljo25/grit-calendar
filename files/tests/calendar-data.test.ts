@@ -18,35 +18,35 @@ import {
 import type { CalendarDefinition } from "../config/calendar";
 
 const settings = {
-  id: "appointments",
+  id: "events",
   timezone: "UTC",
-  event: { slug: "appointments", titleField: "title", startField: "starts_at", endField: "ends_at" },
-  lane: { slug: "rooms", labelField: "name", foreignKey: "room_id" },
+  event: { slug: "events", titleField: "title", startField: "starts_at", endField: "ends_at" },
+  lane: { slug: "lanes", labelField: "name", foreignKey: "resource_id" },
 } as unknown as CalendarDefinition;
 
 const mapping = {
-  eventResource: { slug: "appointments" },
-  laneResource: { slug: "rooms" },
+  eventResource: { slug: "events" },
+  laneResource: { slug: "lanes" },
   titleField: "title",
   startField: "starts_at",
   endField: "ends_at",
-  laneField: "room_id",
+  laneField: "resource_id",
   laneLabelField: "name",
 } as unknown as Mapping;
 
 const row: Row = {
   id: "01TEST",
-  title: "Reunión de equipo 13",
+  title: "Test event",
   starts_at: "2026-11-19T09:00:00+00:00",
   ends_at: "2026-11-19T10:30:00+00:00",
-  room_id: "01ROOM",
+  resource_id: "01ROW",
 };
 
 describe("toEvents", () => {
   it("maps a generated row onto a CalendarKit event", () => {
     const [event] = toEvents([row], mapping);
-    expect(event.title).toBe("Reunión de equipo 13");
-    expect(event.resourceId).toBe("01ROOM");
+    expect(event.title).toBe("Test event");
+    expect(event.resourceId).toBe("01ROW");
     expect(event.start.toISOString()).toBe("2026-11-19T09:00:00.000Z");
     expect(event.end.toISOString()).toBe("2026-11-19T10:30:00.000Z");
   });
@@ -74,12 +74,12 @@ describe("changedFields", () => {
       ...previous,
       start: new Date("2026-11-19T11:00:00Z"),
       end: new Date("2026-11-19T12:30:00Z"),
-      resourceId: "02ROOM",
+      resourceId: "02ROW",
     };
     expect(changedFields(moved, previous, mapping)).toEqual({
       starts_at: "2026-11-19T11:00:00.000Z",
       ends_at: "2026-11-19T12:30:00.000Z",
-      room_id: "02ROOM",
+      resource_id: "02ROW",
     });
   });
 
@@ -101,7 +101,7 @@ describe("timezone", () => {
 
 describe("links", () => {
   it("uses the generated detail route, not /view?id=", () => {
-    expect(detailHref(mapping, "01TEST")).toBe("/resources/appointments/01TEST");
+    expect(detailHref(mapping, "01TEST")).toBe("/resources/events/01TEST");
   });
 });
 
