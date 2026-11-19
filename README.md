@@ -44,7 +44,7 @@ same array.
 | `event.slug`, `lane.slug` | The two resources; empty means auto-detect |
 | `event.*Field`, `lane.*Field` | Field names used to map records to events and rows |
 | `editing.canEdit` | `false` makes the calendar read only, including drag |
-| `editing.canCreate` | `false` hides the floating Create button; `true` redirects to the resource create screen |
+| `editing.canCreate` | `false` hides the floating Create button; `true` redirects to the resource create screen, with a bridge that opens the sheet for the default formView |
 | `editing.canDelete` | `false` hides Delete in the edit sheet and the right-click menu; `true` asks for confirmation and deletes (both the sheet and the right-click menu) |
 | `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "lane_id"]` |
 | `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the form |

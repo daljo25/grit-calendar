@@ -1,6 +1,6 @@
 {
   "name": "calendar",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "summary": "Multiple resource calendars and dashboard widget for Grit, powered by CalendarKit Pro",
   "description": "Adds /calendar and /calendar/<id> pages plus an optional dashboard widget. Each calendar reads two generated resources: one with a datetime field for the events, one linked by a relationship field for the rows. The edit form is built from the resource fields listed in apps/admin/config/calendar.ts, with configurable delete and click behaviour.",
   "requires": [],
@@ -125,6 +125,18 @@
           "next"
         ]
       }
+    },
+    {
+      "from": "files/components/calendar-create-intent.tsx",
+      "to": "apps/admin/components/calendar/calendar-create-intent.tsx",
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     }
   ],
   "injections": [
@@ -210,6 +222,32 @@
       "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
       "marker": "{/* v3.31.44 -- per-resource widgets. One row per registered",
       "code": "      <CalendarWidget />",
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
+    },
+    {
+      "file": "apps/admin/components/resource/resource-page.tsx",
+      "marker": "// grit:resource:imports",
+      "code": "import { CalendarCreateIntent } from \"@/components/calendar/calendar-create-intent\";",
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
+    },
+    {
+      "file": "apps/admin/components/resource/resource-page.tsx",
+      "marker": "{!c.isFormPage && c.form.open && !CustomForm && (",
+      "code": "      <CalendarCreateIntent controller={c} slug={resource.slug} />",
       "when": {
         "architecture": [
           "triple"

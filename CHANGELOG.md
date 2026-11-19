@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.4
+
+- `?action=create` now works for resources with the default sheet formView.
+  A small bridge injected into the resource page opens the same create sheet
+  the resource's own New button uses, then clears the query parameter. Page
+  formView resources are left to the framework's existing handling.
+
 ## 0.4.3
 
 - Create now redirects to the resource's own create screen

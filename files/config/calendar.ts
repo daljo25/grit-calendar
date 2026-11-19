@@ -146,7 +146,9 @@ export const CALENDARS: CalendarDefinition[] = [
       // true | false, default false. On false CalendarKit's floating Create
       // button is hidden from the UI. On true it sends the reader to the
       // resource's own create screen, /resources/<slug>?action=create, so every
-      // required field from the resource definition is available there.
+      // required field from the resource definition is available there. A
+      // small bridge opens the sheet even when the resource uses the default
+      // sheet formView, where that URL was previously ignored.
       canCreate: false,
 
       // true | false, default false. On false Delete is hidden from the edit
