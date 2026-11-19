@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- `config/calendar.ts` is now documented line by line: every setting names its
+  options, its default and what changes when you edit it. No behaviour changed.
+
 ## 0.2.0
 
 - Configuration moved to `apps/admin/config/calendar.ts`: slugs, field mapping,
