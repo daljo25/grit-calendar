@@ -1,0 +1,40 @@
+{
+  "name": "calendar",
+  "version": "0.1.0",
+  "summary": "Month, week and resource calendar for two related Grit resources",
+  "description": "Adds a /calendar screen to the admin using CalendarKit Pro. One generated resource supplies the events (a datetime field), and a second one supplies the rows (rooms, people, equipment) through a relationship field. Click an event to open its record, drag it to another row to change the relationship, and drag it in time to change the date.",
+  "requires": [],
+  "goDeps": [],
+  "nodeDeps": [
+    { "name": "calendarkit-pro", "version": "^2.0.0", "workspace": "apps/admin" }
+  ],
+  "nextSteps": [
+    "pnpm install",
+    "Open /calendar. If the auto-detected mapping is wrong, edit the config block at the top of apps/admin/app/(dashboard)/calendar/page.tsx",
+    "The event resource needs a datetime field and a relationship-select to the row resource"
+  ],
+  "files": [
+    {
+      "from": "files/calendar-page.tsx",
+      "to": "apps/admin/app/(dashboard)/calendar/page.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    }
+  ],
+  "injections": [
+    {
+      "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
+      "marker": "// grit:nav:content",
+      "code": "  { href: \"/calendar\", label: \"Calendar\", iconKey: \"CalendarDays\", adminOnly: false },"
+    },
+    {
+      "file": "apps/admin/lib/icons.ts",
+      "marker": "// grit:icons:import",
+      "code": "  CalendarDays,"
+    },
+    {
+      "file": "apps/admin/lib/icons.ts",
+      "marker": "// grit:icons:map",
+      "code": "  CalendarDays,"
+    }
+  ]
+}
