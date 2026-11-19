@@ -4,46 +4,78 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The toolchain a new machine has today, not the one this plugin was written
+  # against. Pinning the release's own versions is how a plugin goes quietly
+  # uninstallable a few months later, which is the failure this workflow is for.
+  GO_VERSION: "1.27"
+  NODE_VERSION: "26"
+  PNPM_VERSION: "12.21.0"
+
 jobs:
   install-and-remove:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         # The two supported admin shapes, plus one the plugin must leave
         # untouched. The last is what catches an injection that lost its
         # `when` clause: install would fail on a missing admin file, or write
-        # one nobody reads.
+        # one nobody reads. Each entry is named so the three appear on the
+        # run's summary page as `api`, `next` and `vite`.
         include:
-          - arch: "--triple --next"
+          - name: api
+            arch: "--api"
+            suite: the generated API's own Go tests
+          - name: next
+            arch: "--triple --next"
+            suite: the admin's own tests, the plugin's 15 among them
             typecheck: "npx tsc --noEmit"
-            tests: "__tests__/calendar-*.test.*"
-          - arch: "--triple --vite"
+          - name: vite
+            arch: "--triple --vite"
+            # The plugin ships no tests here (see README: a Vite admin's
+            # vitest config points "@" at the app root, not src/), so this
+            # suite proves the install did not break the admin's own.
+            suite: the admin's own tests, with the plugin installed
             # A Vite admin generates its route tree, so tsc knows nothing
             # about its routes until `tsr generate` has run, and generation is
             # also where a route file whose path disagrees with its URL fails.
             # Unused-symbol errors are switched off because the scaffold ships
             # several of its own, which have nothing to do with the plugin.
             typecheck: "pnpm exec tsr generate && npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false"
-          - arch: "--api"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: plugin
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.26"
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          # This repository is a plugin, not a Go module: there is no go.sum
+          # for the cache key, and asking for one prints a failure on every run.
+          cache: false
 
       # The toolchain comes before the scaffold: a Vite project is created with
       # a package.json the scaffold itself writes, and anything that reaches
       # for pnpm there fails in a way that looks like a plugin problem.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
+        if: matrix.arch != '--api'
         with:
-          version: 10.33.4
-      - uses: actions/setup-node@v4
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        if: matrix.arch != '--api'
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install the Grit CLI
         run: go install github.com/MUKE-coder/grit/v3/cmd/grit@latest
@@ -51,16 +83,42 @@ jobs:
       - name: Scaffold a project
         run: grit new testbed ${{ matrix.arch }} --db sqlite --storage local
 
+      # `grit new` prints `pnpm install` as a next step instead of running it,
+      # so package.json carries the pnpm of the release that generated it, and
+      # pnpm honours that field over the version on PATH. Without this rewrite
+      # the install below runs on the scaffold's pnpm and this job tests the
+      # past rather than today's toolchain.
+      - name: Use pnpm ${{ env.PNPM_VERSION }}, not the scaffold's pin
+        if: matrix.arch != '--api'
+        working-directory: testbed
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            p.packageManager = "pnpm@" + process.env.PNPM_VERSION;
+            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+          '
+          grep packageManager package.json
+
       - name: Install the plugin
         working-directory: testbed
         run: grit plugin add ../plugin
+
+      # Labelled before the tests run, so the job summary reads "next" above
+      # the report Vitest writes under it. The three jobs' summaries are what
+      # the run page shows, which is where a release is checked.
+      - name: Label this shape in the run summary
+        env:
+          SHAPE: ${{ matrix.name }}
+          SUITE: ${{ matrix.suite }}
+        run: printf '### %s\n\n%s\n\n' "$SHAPE" "$SUITE" >> "$GITHUB_STEP_SUMMARY"
 
       - name: The generated API still builds
         working-directory: testbed/apps/api
         run: go build ./...
 
       - name: An API-only project gets no admin files
-        if: ${{ !matrix.typecheck }}
+        if: matrix.arch == '--api'
         working-directory: testbed
         run: |
           if find . -name '*calendar*' -not -path './.git/*' | grep -q .; then
@@ -68,23 +126,35 @@ jobs:
             exit 1
           fi
 
-      - name: The admin type-checks
-        if: matrix.typecheck
+      - name: Install the frontend
+        if: matrix.arch != '--api'
         working-directory: testbed
-        run: |
-          pnpm install
-          cd apps/admin
-          ${{ matrix.typecheck }}
+        run: pnpm install
 
-      # The shell script checks install and removal. These check the mapping,
-      # timezone and write-back rules that a grep cannot see, plus the two
-      # flows that regressed most: ?action=create and the delete confirmation.
-      # They belong to the Next admin: the Vite one's vitest config points "@"
-      # at the app root, so a test importing app code cannot resolve there.
-      - name: The plugin's tests pass
-        if: matrix.tests
+      - name: The admin type-checks
+        if: matrix.arch != '--api'
         working-directory: testbed/apps/admin
-        run: pnpm exec vitest run ${{ matrix.tests }}
+        run: ${{ matrix.typecheck }}
+
+      # The shell script in tests/ checks the install and removal mapping.
+      # These check the mapping, timezone and write-back rules a grep cannot
+      # see, plus the flows that regressed most: ?action=create, the delete
+      # confirmation and the field allowlist. In the Next admin they are part
+      # of the project's own suite, so a broken injection elsewhere in the
+      # admin fails here too.
+      - name: The admin's tests pass
+        if: matrix.arch != '--api'
+        working-directory: testbed/apps/admin
+        run: pnpm test
+
+      - name: The API's tests pass
+        if: matrix.arch == '--api'
+        working-directory: testbed/apps/api
+        run: |
+          set -o pipefail
+          go test ./... | tee /tmp/go-test.log
+          ok=$(grep -c '^ok ' /tmp/go-test.log || true)
+          printf '**go test**: %s packages ok\n' "$ok" >> "$GITHUB_STEP_SUMMARY"
 
       # Removal replays the lockfile, so it cannot take back an edit the
       # lockfile has no record of. This build is where that shows up.
