@@ -40,7 +40,7 @@ export interface CalendarDefinition {
     pageSize: number;
   };
   lane: { slug: string; labelField: string; foreignKey: string };
-  editing: { canEdit: boolean; canDelete: boolean; fields: string[]; openOnClick: CalendarClickAction };
+  editing: { canEdit: boolean; canCreate: boolean; canDelete: boolean; fields: string[]; openOnClick: CalendarClickAction };
   timezone: string;
   theme: CalendarTheme;
 }
@@ -142,6 +142,11 @@ export const CALENDARS: CalendarDefinition[] = [
       // edit form, no drag and no delete. The record page still edits every
       // field.
       canEdit: true,
+
+      // true | false, default false. Hides CalendarKit's floating Create
+      // button. On true a quick create writes a new row through POST with the
+      // same field mapping below. The record page always creates rows too.
+      canCreate: false,
 
       // true | false, default false. Adds a Delete button to the edit form.
       // On false the button is absent. On true a confirmation is required and

@@ -1,12 +1,16 @@
 {
   "name": "calendar",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "summary": "Multiple resource calendars and dashboard widget for Grit, powered by CalendarKit Pro",
   "description": "Adds /calendar and /calendar/<id> pages plus an optional dashboard widget. Each calendar reads two generated resources: one with a datetime field for the events, one linked by a relationship field for the rows. The edit form is built from the resource fields listed in apps/admin/config/calendar.ts, with configurable delete and click behaviour.",
   "requires": [],
   "goDeps": [],
   "nodeDeps": [
-    { "name": "calendarkit-pro", "version": "^2.0.0", "workspace": "apps/admin" }
+    {
+      "name": "calendarkit-pro",
+      "version": "^2.0.0",
+      "workspace": "apps/admin"
+    }
   ],
   "nextSteps": [
     "pnpm install",
@@ -15,49 +19,112 @@
   ],
   "files": [
     {
-      "from": "files/calendar.config.ts",
+      "from": "files/config/calendar.ts",
       "to": "apps/admin/config/calendar.ts",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-data.ts",
+      "from": "files/components/calendar-data.ts",
       "to": "apps/admin/components/calendar/calendar-data.ts",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-event-form.tsx",
+      "from": "files/components/calendar-event-form.tsx",
       "to": "apps/admin/components/calendar/calendar-event-form.tsx",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-view.tsx",
+      "from": "files/components/calendar-view.tsx",
       "to": "apps/admin/components/calendar/calendar-view.tsx",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-page.tsx",
+      "from": "files/pages/calendar-page.tsx",
       "to": "apps/admin/app/(dashboard)/calendar/page.tsx",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-id-page.tsx",
+      "from": "files/pages/calendar-id-page.tsx",
       "to": "apps/admin/app/(dashboard)/calendar/[id]/page.tsx",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-widget.tsx",
+      "from": "files/components/calendar-widget.tsx",
       "to": "apps/admin/components/calendar/calendar-widget.tsx",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar.css",
+      "from": "files/components/calendar.css",
       "to": "apps/admin/components/calendar/calendar.css",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
-      "from": "files/calendar-data.test.ts",
+      "from": "files/tests/calendar-data.test.ts",
       "to": "apps/admin/__tests__/calendar-data.test.ts",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     }
   ],
   "injections": [
@@ -65,43 +132,92 @@
       "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
       "marker": "import { resources } from \"@/resources\";",
       "code": "import { CALENDAR_NAV } from \"@/config/calendar\";",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
       "marker": "// grit:nav:content",
       "code": "  ...CALENDAR_NAV,",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/lib/icons.ts",
       "marker": "// grit:icons:import",
       "code": "  CalendarDays,",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/lib/icons.ts",
       "marker": "// grit:icons:map",
       "code": "  CalendarDays,",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/lib/dashboard-catalog.ts",
       "marker": "  { key: \"system:users\", kind: \"card\", module: \"System\", moduleIcon: \"Shield\", label: \"Users\", description: \"Total registered users\" },",
       "code": "  { key: \"system:calendar\", kind: \"card\", module: \"Calendar\", moduleIcon: \"CalendarDays\", label: \"Calendar\", description: \"Upcoming events from the calendar plugin\" },",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
       "marker": "import { ResourceWidgetsRow } from \"@/components/dashboard/ResourceWidgetsRow\";",
       "code": "import { CalendarWidget } from \"@/components/calendar/calendar-widget\";",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     },
     {
       "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
       "marker": "{/* v3.31.44 -- per-resource widgets. One row per registered",
       "code": "      <CalendarWidget />",
-      "when": { "architecture": ["triple"], "frontend": ["next"] }
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
     }
   ]
 }

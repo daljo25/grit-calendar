@@ -11,6 +11,7 @@ import { Scheduler, type CalendarEvent, type ViewType } from "calendarkit-pro";
 import type { CalendarDefinition } from "@/config/calendar";
 import {
   changedFields,
+  createEvent,
   deleteEvent,
   detailHref,
   patchEvent,
@@ -109,7 +110,14 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (!mapping || !settings.editing.canDelete) return;
+      if (!mapping) return;
+      // CalendarKit removes the event from its own state and shows an Undo
+      // toast before calling this. When deletion is disabled, giving it a new
+      // events array puts the row back: the API was never touched.
+      if (!settings.editing.canDelete) {
+        setEventRows((rows) => [...rows]);
+        return;
+      }
       setEventRows((rows) => rows.filter((row) => String(row.id) !== id));
       deleteEvent(id, mapping)
         .then(() =>
@@ -117,6 +125,35 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
         )
         .catch((err: unknown) =>
           setError(err instanceof Error ? err.message : "Could not delete the event")
+        );
+    },
+    [mapping, settings, queryClient]
+  );
+
+  const handleCreate = useCallback(
+    (event: Partial<CalendarEvent>) => {
+      if (!mapping) return;
+      if (!settings.editing.canCreate) {
+        setEventRows((rows) => [...rows]);
+        return;
+      }
+      // CalendarKit hands a partial event: a quick card may only know a
+      // sentence and a slot. Fill the required fields from those defaults.
+      const complete: CalendarEvent = {
+        id: event.id ?? crypto.randomUUID(),
+        title: event.title ?? "Event",
+        start: event.start ?? new Date(),
+        end: event.end ?? new Date(Date.now() + 3600000),
+        resourceId: event.resourceId,
+      };
+      createEvent(complete, mapping)
+        .then(() => readRows(mapping.eventResource, settings))
+        .then((rows) => {
+          setEventRows(rows);
+          queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] });
+        })
+        .catch((err: unknown) =>
+          setError(err instanceof Error ? err.message : "Could not create the event")
         );
     },
     [mapping, settings, queryClient]
@@ -142,6 +179,12 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
 
   const theme =
     settings.theme === "grit" ? { preset: "calm" as const } : settings.theme;
+  const rootClasses = [
+    settings.theme === "grit" ? "calendar-grit" : "",
+    settings.editing.canCreate ? "" : "calendar-no-create",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="space-y-4 p-6">
@@ -161,6 +204,7 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
           view={view}
           onViewChange={setView}
           onEventClick={handleClick}
+          onEventCreate={handleCreate}
           onEventUpdate={handleUpdate}
           onEventDelete={handleDelete}
           timezone={settings.timezone}
@@ -178,9 +222,7 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
                 )
               : undefined
           }
-          classNames={
-            settings.theme === "grit" ? { root: "calendar-grit" } : undefined
-          }
+          classNames={{ root: rootClasses }}
         />
       </div>
     </div>

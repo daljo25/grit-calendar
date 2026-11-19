@@ -44,6 +44,7 @@ same array.
 | `event.slug`, `lane.slug` | The two resources; empty means auto-detect |
 | `event.*Field`, `lane.*Field` | Field names used to map records to events and rows |
 | `editing.canEdit` | `false` makes the calendar read only, including drag |
+| `editing.canCreate` | `false` hides CalendarKit's floating Create button; `true` writes a row on quick create |
 | `editing.canDelete` | `false` hides Delete; `true` asks for confirmation and deletes |
 | `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "room_id"]` |
 | `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the form |
@@ -67,9 +68,9 @@ every file and injection carries `when: { architecture: ["triple"], frontend:
 
 ## Out of scope
 
-Creating events from CalendarKit's quick card is not persisted. Only changes
-and deletions of records that already exist are written back, and deletions
-only when `editing.canDelete` is true.
+Creation from the quick card only writes a row when `editing.canCreate` is
+true; it is off by default. Deletions only reach the API when
+`editing.canDelete` is true.
 
 ## Verification
 

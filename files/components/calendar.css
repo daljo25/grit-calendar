@@ -7,6 +7,13 @@
 
 /* Two classes, not one: CalendarKit injects its own .ck-root stylesheet at
  * runtime, so equal specificity would let whichever loads last win. */
+/* No documented prop hides CalendarKit's floating Create button; readOnly
+ * would also disable drag. The button is identified by the classes CalendarKit
+ * gives it in 2.x, so this rule is pinned to that version. */
+.calendar-no-create button.ck\:absolute.ck\:bottom-6.ck\:right-6.ck\:z-30 {
+  display: none;
+}
+
 .ck-root.calendar-grit {
   --ck-background: var(--bg-secondary);
   --ck-foreground: var(--text-primary);

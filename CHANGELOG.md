@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- `editing.canCreate` hides CalendarKit's floating Create button. On true, a
+  quick create writes a row through POST with the same field mapping.
+- A Delete coming from CalendarKit's own context menu no longer removes the
+  event locally when `editing.canDelete` is false: the callbacks resync the
+  events array, so the toast can say "deleted" without the row disappearing.
+- The plugin source is now grouped into `files/config`, `files/components`,
+  `files/pages` and `files/tests`. The manifest still names one file per
+  destination because `localFile` has no directory form.
+
 ## 0.3.2
 
 - The edit form uses the admin's own `ResponsiveSheet`, `Input`, `Button` and
