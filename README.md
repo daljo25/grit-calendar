@@ -79,3 +79,8 @@ The script scaffolds a fresh project, installs the plugin, checks the written
 files and injections, builds the generated API, removes the plugin and builds
 again. Removal matters as much as install: it replays the lockfile backwards,
 so a plugin that edits a file outside the injection mechanism leaves wreckage.
+
+The frontend was checked separately against a project with `Room` and
+`Appointment` resources. `pnpm --filter <project>-admin exec tsc --noEmit`
+passes and `next build` emits `/calendar`. The auto-detected mapping picks
+`appointments` as the event resource and `rooms` as the rows.
