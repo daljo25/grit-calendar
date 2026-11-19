@@ -8,6 +8,7 @@
 // hides Delete unless editing.canDelete is true.
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { EventEditorProps, Resource } from "calendarkit-pro";
 
 import type { CalendarDefinition } from "@/config/calendar";
@@ -47,7 +48,11 @@ export function CalendarEventForm({
     setLane(event.resourceId ?? "");
   }, [isOpen, event, settings]);
 
-  if (!isOpen || !event) return null;
+  // CalendarKit's stylesheet is unlayered, so inside .ck-root it beats every
+  // Tailwind utility in @layer utilities: buttons turn transparent, borders
+  // disappear and the card loses its padding. Portalling to body escapes that
+  // scope completely and keeps the admin's own theme tokens.
+  if (!isOpen || !event || typeof document === "undefined") return null;
 
   const allowed = (field: string) =>
     settings.editing.canEdit && settings.editing.fields.includes(field);
@@ -74,7 +79,7 @@ export function CalendarEventForm({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       role="presentation"
@@ -91,7 +96,7 @@ export function CalendarEventForm({
         <h2 className="mb-4 text-lg font-semibold">Edit event</h2>
 
         {!anyField && (
-          <p className="mb-4 text-sm text-muted">
+          <p className="mb-4 text-sm text-text-muted">
             No fields are editable for this calendar. Change editing.fields in
             config/calendar.ts.
           </p>
@@ -100,7 +105,7 @@ export function CalendarEventForm({
         <div className="space-y-4">
           {showTitle && (
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">Title</span>
+              <span className="mb-1 block text-text-muted">Title</span>
               <input
                 className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
                 value={title}
@@ -111,7 +116,7 @@ export function CalendarEventForm({
 
           {showStart && (
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">Start</span>
+              <span className="mb-1 block text-text-muted">Start</span>
               <input
                 type="datetime-local"
                 className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
@@ -123,7 +128,7 @@ export function CalendarEventForm({
 
           {showEnd && (
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">End</span>
+              <span className="mb-1 block text-text-muted">End</span>
               <input
                 type="datetime-local"
                 className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
@@ -135,7 +140,7 @@ export function CalendarEventForm({
 
           {showLane && (
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">Row</span>
+              <span className="mb-1 block text-text-muted">Row</span>
               <select
                 className="w-full rounded-md border border-border bg-bg-secondary px-3 py-2"
                 value={lane}
@@ -182,6 +187,7 @@ export function CalendarEventForm({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

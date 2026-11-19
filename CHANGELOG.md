@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+- The edit form now renders through a portal to `document.body`. CalendarKit's
+  stylesheet is unlayered and wins over Tailwind's layered utilities anywhere
+  inside `.ck-root`, which made the card transparent and removed its padding,
+  borders and rounded corners.
+- Corrected the muted text utility (`text-text-muted`).
+
 ## 0.3.0
 
 - Multiple calendars: `CALENDARS` is an array. The first entry owns `/calendar`,
