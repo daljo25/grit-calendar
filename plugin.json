@@ -9,9 +9,9 @@
     { "name": "calendarkit-pro", "version": "^2.0.0", "workspace": "apps/admin" }
   ],
   "nextSteps": [
-    "pnpm install",
+    "On a triple Next.js project: pnpm install",
     "Open /calendar. If the auto-detected mapping is wrong, edit the config block at the top of apps/admin/app/(dashboard)/calendar/page.tsx",
-    "The event resource needs a datetime field and a relationship-select to the row resource"
+    "The event resource needs a datetime field and a relationship-select to the row resource. Other architectures get no files from this version."
   ],
   "files": [
     {
@@ -24,17 +24,20 @@
     {
       "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
       "marker": "// grit:nav:content",
-      "code": "  { href: \"/calendar\", label: \"Calendar\", iconKey: \"CalendarDays\", adminOnly: false },"
+      "code": "  { href: \"/calendar\", label: \"Calendar\", iconKey: \"CalendarDays\", adminOnly: false },",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {
       "file": "apps/admin/lib/icons.ts",
       "marker": "// grit:icons:import",
-      "code": "  CalendarDays,"
+      "code": "  CalendarDays,",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {
       "file": "apps/admin/lib/icons.ts",
       "marker": "// grit:icons:map",
-      "code": "  CalendarDays,"
+      "code": "  CalendarDays,",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
     }
   ]
 }

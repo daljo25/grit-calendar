@@ -15,6 +15,10 @@ event to another row changes the relationship; dragging it in time changes the
 dates. Both moves are written with `PATCH <resource endpoint>/<id>`, which every
 generated Grit resource has.
 
+The repository was started with `grit plugin new calendar` and keeps that
+workflow, adapted: install on a fresh project, type-check the admin, remove the
+plugin and build again.
+
 ## Install
 
 ```bash
@@ -61,9 +65,11 @@ grit generate resource Appointment \
 Version 0.1.0 targets a **triple** project (separate API, web and admin) with a
 **Next.js** admin. A community plugin manifest has static project paths and no
 admin-root placeholder, so writing into a double, single, embedded or TanStack
-admin would land in a directory the app never compiles. That limitation is
-deliberate: the plugin refuses to install into a shape it cannot serve instead
-of reporting success with an invisible page.
+admin would land in a directory the app never compiles. Every file and every
+injection therefore carries `when: { architecture: ["triple"], frontend:
+["next"] }`: on other shapes the plugin writes nothing and patches nothing.
+A community manifest has no preflight hook, so this is a no-op rather than a
+loud refusal; the `when` clauses are what keep it from doing damage.
 
 Adding `{{ADMIN_ROOT}}` to the plugin manifest is the prerequisite for the other
 shapes, followed by a TanStack page variant.

@@ -1,0 +1,75 @@
+name: plugin
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  install-and-remove:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The supported shape, and one the plugin must leave untouched. The
+        # second is what catches an injection that lost its `when` clause:
+        # install would fail on a missing admin file, or write one nobody reads.
+        include:
+          - arch: "--triple --next"
+            frontend: true
+          - arch: "--api"
+            frontend: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install the Grit CLI
+        run: go install github.com/MUKE-coder/grit/v3/cmd/grit@latest
+
+      - name: Scaffold a project
+        run: grit new testbed ${{ matrix.arch }} --db sqlite --storage local
+
+      - name: Install the plugin
+        working-directory: testbed
+        run: grit plugin add ../plugin
+
+      - name: The generated API still builds
+        working-directory: testbed/apps/api
+        run: go build ./...
+
+      - name: An API-only project gets no admin files
+        if: ${{ !matrix.frontend }}
+        working-directory: testbed
+        run: |
+          if find . -name '*calendar*' -not -path './.git/*' | grep -q .; then
+            echo "calendar wrote files into a project with no admin" >&2
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: matrix.frontend
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        if: matrix.frontend
+        with:
+          node-version: "22"
+
+      - name: The admin type-checks
+        if: matrix.frontend
+        working-directory: testbed
+        run: |
+          pnpm install
+          cd apps/admin && npx tsc --noEmit
+
+      # Removal replays the lockfile, so it cannot take back an edit the
+      # lockfile has no record of. This build is where that shows up.
+      - name: Remove it, and the project still builds
+        working-directory: testbed
+        run: |
+          grit plugin remove calendar --force
+          cd apps/api && go build ./...
