@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0
+
+First publishable beta. No behaviour changed since 0.4.4.
+
+- MIT license added.
+- `calendarkit-pro` pinned to exact 2.0.0. Two CSS rules that hide CalendarKit's
+  Create button and context-menu Delete depend on that version's class names.
+- Triple + Vite/TanStack support: the shared files are installed under
+  `apps/admin/src`, with frontend-specific components, pages and route shims.
+  Double, single, API-only and mobile projects remain pending.
+- Source grouped by shape instead of by file type: `files/shared`,
+  `files/next`, `files/tanstack`, with paths relative to the admin root. This
+  removes the `-tanstack` filename suffix and makes every `from` derivable from
+  its `to`. The manifest still lists a shared file twice, once per frontend.
+- Component tests for `?action=create`, the edit sheet's field allowlist and
+  the delete confirmation. 15 tests pass in each supported architecture.
+- README rewritten for a public release, including limitations and i18n being
+  deferred to a later version.
+
 ## 0.4.4
 
 - `?action=create` now works for resources with the default sheet formView.

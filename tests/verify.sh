@@ -71,4 +71,39 @@ if grep -q 'system:calendar\|CalendarWidget' "$CATALOG" "$DASHBOARD"; then
 fi
 (cd apps/api && go build ./...)
 
-echo "grit-calendar: install and remove verified"
+# Triple + Vite (TanStack) has different paths for the admin code. The same
+# manifest must land in src/ and add the same injections there. A build is not
+# needed here: Grit's generated route tree and Vitest alias are scaffold
+# concerns, not plugin ones.
+cd "$WORK"
+"$BIN" new cal-vite-verify --triple --vite --db sqlite --storage local >/dev/null
+cd cal-vite-verify
+git init -q
+git add -A
+git -c user.name=verify -c user.email=verify@example.com commit -qm init
+"$BIN" plugin add "$PLUGIN_DIR" --force >/dev/null
+
+for file in \
+  "apps/admin/src/config/calendar.ts" \
+  "apps/admin/src/components/calendar/calendar-data.ts" \
+  "apps/admin/src/components/calendar/calendar-event-form.tsx" \
+  "apps/admin/src/components/calendar/calendar-view.tsx" \
+  "apps/admin/src/components/calendar/calendar-widget.tsx" \
+  "apps/admin/src/components/calendar/calendar.css" \
+  "apps/admin/src/components/calendar/calendar-create-intent.tsx" \
+  "apps/admin/src/routes/_dashboard/calendar.tsx" \
+  'apps/admin/src/routes/_dashboard/calendar/$id.tsx'; do
+  test -f "$file" || { echo "missing $file" >&2; exit 1; }
+done
+grep -q 'CALENDAR_NAV' apps/admin/src/components/chrome/CollapsibleSidebar.tsx
+grep -q 'system:calendar' apps/admin/src/lib/dashboard-catalog.ts
+grep -q 'CalendarWidget' apps/admin/src/pages/dashboard.tsx
+
+"$BIN" plugin remove calendar --force >/dev/null
+test ! -f apps/admin/src/config/calendar.ts
+if grep -q 'CALENDAR_NAV' apps/admin/src/components/chrome/CollapsibleSidebar.tsx; then
+  echo "removal left the TanStack sidebar link behind" >&2
+  exit 1
+fi
+
+echo "grit-calendar: install and remove verified (Next and TanStack)"

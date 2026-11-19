@@ -1,22 +1,43 @@
 # grit-calendar
 
-A community plugin for Grit. It installs one or more resource calendars plus an
+A community plugin for Grit. It installs one or more resource calendars and an
 optional dashboard widget, using [CalendarKit Pro](https://calendarkit.io/)
-(MIT) for the views, the time grid and drag and drop.
+2.0.0 (MIT) for the views, the time grid and drag and drop.
 
 Each calendar reads two generated resources:
 
-- the **event** resource supplies the events from a `datetime` field;
+- the **event** resource supplies events from a `datetime` field;
 - the **row** resource supplies the lanes through a relationship field on the
   event (rooms, people, equipment).
 
-Click an event opens its record page. Dragging it to another row or time writes
-a `PATCH` to the generated resource endpoint. Editing in the calendar uses a
-form built only from the resource fields you allow, so CalendarKit's generic
-Location, Guests, Reminders and Description fields never appear.
+Click an event opens its generated record page. Dragging changes its date and
+row through the resource's PATCH route. Editing uses a form built from Grit's
+own `ResponsiveSheet`, `Input`, `Button` and `ConfirmModal`, limited to the
+fields listed in the config.
 
 The repository was started with `grit plugin new calendar` and keeps that
-workflow, with a Vitest step added for the data helpers.
+workflow, with component tests added for the flows that used to regress.
+
+![The resource view: one lane per room, events on a shared time grid](arts/resource.webp)
+
+<details>
+<summary>All five views, light and dark</summary>
+
+| View | Light | Dark |
+|---|---|---|
+| Month | ![Month view](arts/month.webp) | ![Month view, dark theme](arts/month-dark.webp) |
+| Week | ![Week view](arts/week.webp) | ![Week view, dark theme](arts/week-dark.webp) |
+| Day | ![Day view](arts/day.webp) | ![Day view, dark theme](arts/day-dark.webp) |
+| Agenda | ![Agenda view](arts/agenda.webp) | ![Agenda view, dark theme](arts/agenda-dark.webp) |
+| Resource | ![Resource view](arts/resource.webp) | ![Resource view, dark theme](arts/resource-dark.webp) |
+
+</details>
+
+## Status
+
+This is a beta release. It is usable in the supported architectures below, but
+it is not translated and it does not cover every Grit shape yet. See
+[Limitations](#limitations).
 
 ## Install
 
@@ -27,14 +48,15 @@ pnpm install
 
 ## Configuration
 
-Everything is in **`apps/admin/config/calendar.ts`**, written by the plugin. It
-is documented line by line with the options and default of every setting. Edit
-a value, save, and Next hot-reloads. Reinstalling is never needed.
+Everything is in **`apps/admin/config/calendar.ts`** for Next.js projects and
+**`apps/admin/src/config/calendar.ts`** for TanStack projects. The file is
+documented line by line with the options, defaults and effects of every
+setting. Edit a value, save, and the dev server hot-reloads. Reinstalling is
+never needed.
 
-`CALENDARS` is an array so one install can serve, for example, a calendar for
-admins and another for members. The first entry keeps `/calendar`; every other
-entry is at `/calendar/<id>`. The sidebar and the widget are derived from the
-same array.
+`CALENDARS` is an array so one install can serve several calendars, for example
+one for admins and one for members. The first entry owns `/calendar`; the rest
+live at `/calendar/<id>`. The sidebar and the widget derive from the same array.
 
 | Setting | What it does |
 |---|---|
@@ -44,33 +66,75 @@ same array.
 | `event.slug`, `lane.slug` | The two resources; empty means auto-detect |
 | `event.*Field`, `lane.*Field` | Field names used to map records to events and rows |
 | `editing.canEdit` | `false` makes the calendar read only, including drag |
-| `editing.canCreate` | `false` hides the floating Create button; `true` redirects to the resource create screen, with a bridge that opens the sheet for the default formView |
-| `editing.canDelete` | `false` hides Delete in the edit sheet and the right-click menu; `true` asks for confirmation and deletes (both the sheet and the right-click menu) |
-| `editing.fields` | Resource fields the edit form may change, e.g. `["starts_at", "ends_at", "lane_id"]` |
-| `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the form |
+| `editing.canCreate` | `false` hides Create; `true` redirects to the resource create screen |
+| `editing.canDelete` | `false` hides Delete in the sheet and the right-click menu; `true` confirms first |
+| `editing.fields` | Resource fields the edit sheet may change |
+| `editing.openOnClick` | `"detail"` opens the record page, `"edit"` opens the edit sheet |
 | `timezone` | IANA zone; `UTC` keeps a 09:00 database value at 09:00 |
 | `theme` | `"grit"` follows the admin's theme tokens; other values are CalendarKit presets |
 
-Example resources:
-
-```bash
-grit generate resource Lane --fields 'name:string'
-grit generate resource Booking \
-  --fields 'title:string,starts_at:datetime,ends_at:datetime,lane:belongs_to[Lane]'
-```
-
 ## Supported projects
 
-Version 0.3.0 targets a **triple** project with a **Next.js** admin. A community
-plugin manifest has static project paths and no admin-root placeholder, so
-every file and injection carries `when: { architecture: ["triple"], frontend:
-["next"] }`. On other shapes the plugin writes nothing.
+Version 0.5.0 supports:
 
-## Out of scope
+- **triple + Next.js**: admin code in `apps/admin`
+- **triple + Vite/TanStack**: admin code in `apps/admin/src`
 
-Creation from the quick card only writes a row when `editing.canCreate` is
-true; it is off by default. Deletions only reach the API when
-`editing.canDelete` is true.
+Both get the same features, with frontend-specific files for routing and links.
+The plugin manifest has no admin-root placeholder, so other shapes are pending
+until the core gains one. See
+[grit#227](https://github.com/MUKE-coder/grit/issues/227).
+
+## Repository layout
+
+Source lives under `files/`, grouped by the shape it lands in, the way Grit's
+own `grit plugin new` groups `files/api/` and `files/admin/`:
+
+| Directory | Installed into | Use for |
+|---|---|---|
+| `files/shared/` | both shapes | files whose body is identical for Next.js and TanStack |
+| `files/next/` | `apps/admin/` | files only Next.js needs |
+| `files/tanstack/` | `apps/admin/src/` | files only TanStack needs |
+
+Paths under each directory are relative to the admin root, so the mapping is
+mechanical: `files/tanstack/routes/_dashboard/calendar.tsx` is written to
+`apps/admin/src/routes/_dashboard/calendar.tsx`, and one `files/shared/` entry
+is listed twice in the manifest, once per `frontend`.
+
+Two consequences worth knowing before editing:
+
+- A file belongs in `shared/` only if both shapes can run the same body. The
+  relative path `components/calendar/calendar-create-intent.tsx` exists in both
+  shapes with different content, because the import of `next/navigation` versus
+  `@/lib/next-compat` is the whole difference. Do not infer shared-ness from the
+  path.
+- `plugin.json` still needs one entry per installed file, so a shared file
+  appears twice with the same `from`. If Grit ever gains an `{{ADMIN_ROOT}}`
+  placeholder, those pairs collapse to one entry each without moving any source
+  file. See [grit#227](https://github.com/MUKE-coder/grit/issues/227).
+
+## Limitations
+
+- Double, single, API-only and mobile projects are not supported. A community
+  manifest only maps individual files, so the plugin writes nothing there.
+- The UI strings are English. No Grit plugin ships translations yet; i18n is
+  planned for a later version. Half of it is cheap when it comes: CalendarKit
+  takes a `translations` object of its own, so the library's labels are a small
+  addition next to the plugin's.
+- Each lane header shows `ID: <record id>` under its label. That line is
+  hardcoded in CalendarKit 2.0.0 and its `translations.idLabel` falls back to
+  the same text when empty (`translations?.idLabel || "ID: {id}"`), so there is
+  no supported way to remove it. Hiding it would take a third CSS rule of the
+  kind listed above, and the record id is the lane's own key, so it is left
+  visible.
+- CalendarKit has no public prop for hiding its floating Create button or the
+  Delete item in its right-click menu. Two CSS rules scoped to the calendar root
+  hide those controls, and they depend on the class names used by CalendarKit
+  **2.0.0**. That is why the npm dependency is pinned to the exact version
+  instead of a caret range. If the library is upgraded, those selectors need
+  checking.
+- Creating a row from CalendarKit redirects to the resource's own create
+  screen, which is the only place that knows every required field.
 
 ## Verification
 
@@ -79,7 +143,20 @@ go build -o /tmp/grit ./cmd/grit        # from a Grit checkout
 GRIT_BIN=/tmp/grit ./tests/verify.sh
 ```
 
-The script scaffolds a fresh project, installs the plugin, checks the files and
-injections, builds the API, removes the plugin and builds again. CI also runs
-`tsc --noEmit` and `vitest run __tests__/calendar-data.test.ts` in the generated
-admin.
+The script scaffolds triple Next and triple Vite projects, installs the plugin,
+checks the files and injections, removes it and checks again. CI also runs
+`tsc --noEmit` and the component tests in the generated admin.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Publishing
+
+```bash
+git tag v0.5.0 && git push --tags
+grit plugin submit
+```
+
+The description in `plugin.json` is what `grit plugin list` shows, so keep it
+short and accurate there.
