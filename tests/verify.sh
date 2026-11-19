@@ -23,24 +23,46 @@ git -c user.name=verify -c user.email=verify@example.com commit -qm init
 
 "$BIN" plugin add "$PLUGIN_DIR" --force
 
+CONFIG='apps/admin/config/calendar.ts'
+DATA='apps/admin/components/calendar/calendar-data.ts'
 PAGE='apps/admin/app/(dashboard)/calendar/page.tsx'
-test -f "$PAGE"
-grep -q 'calendarkit-pro' "$PAGE"
-grep -q 'href: "/calendar"' apps/admin/components/chrome/CollapsibleSidebar.tsx
-grep -q 'CalendarDays' apps/admin/lib/icons.ts
+WIDGET='apps/admin/components/calendar/calendar-widget.tsx'
+CSS='apps/admin/components/calendar/calendar.css'
+SIDEBAR='apps/admin/components/chrome/CollapsibleSidebar.tsx'
+ICONS='apps/admin/lib/icons.ts'
+CATALOG='apps/admin/lib/dashboard-catalog.ts'
+DASHBOARD='apps/admin/app/(dashboard)/dashboard/page.tsx'
+
+for file in "$CONFIG" "$DATA" "$PAGE" "$WIDGET" "$CSS"; do
+  test -f "$file" || { echo "missing $file" >&2; exit 1; }
+done
+
+grep -q 'timezone: "UTC"' "$CONFIG"
+grep -q 'theme: "grit"' "$CONFIG"
+grep -q 'href: "/calendar"' "$CONFIG"
+grep -q '\.\.\.CALENDAR_NAV' "$SIDEBAR"
+grep -q 'CalendarDays' "$ICONS"
+grep -q 'system:calendar' "$CATALOG"
+grep -q 'CalendarWidget' "$DASHBOARD"
 grep -q 'calendarkit-pro' apps/admin/package.json
 
 (cd apps/api && go build ./...)
 
 "$BIN" plugin remove calendar --force
 
-test ! -f "$PAGE"
-if grep -q 'href: "/calendar"' apps/admin/components/chrome/CollapsibleSidebar.tsx; then
+for file in "$CONFIG" "$DATA" "$PAGE" "$WIDGET" "$CSS"; do
+  test ! -f "$file" || { echo "removal left $file behind" >&2; exit 1; }
+done
+if grep -q 'CALENDAR_NAV' "$SIDEBAR"; then
   echo "removal left the sidebar link behind" >&2
   exit 1
 fi
-if grep -q 'CalendarDays' apps/admin/lib/icons.ts; then
+if grep -q 'CalendarDays' "$ICONS"; then
   echo "removal left the icon behind" >&2
+  exit 1
+fi
+if grep -q 'system:calendar\|CalendarWidget' "$CATALOG" "$DASHBOARD"; then
+  echo "removal left the dashboard widget behind" >&2
   exit 1
 fi
 (cd apps/api && go build ./...)

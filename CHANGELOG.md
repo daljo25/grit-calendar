@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0
+
+- Configuration moved to `apps/admin/config/calendar.ts`: slugs, field mapping,
+  sidebar label and icon, widget, timezone and theme.
+- Added an optional dashboard widget with the next events and a link to the
+  calendar.
+- The calendar uses the admin's theme tokens by default (`theme: "grit"`) and
+  honours dark mode.
+- Event edits made in CalendarKit are written back to the API and invalidate
+  the resource's query cache, so the admin table reflects them.
+- Default `timezone: "UTC"` stops an 09:00 database value from showing as 10:00
+  in a UTC+1 browser.
+- Clicking an event opens `/resources/<slug>/<id>`, the route Grit actually
+  generates. The old `/view?id=` link showed "This record could not be found".
+
 ## 0.1.0
 
 First release. A `/calendar` page for a triple Next.js admin, built on

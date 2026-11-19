@@ -1,30 +1,56 @@
 {
   "name": "calendar",
-  "version": "0.1.0",
-  "summary": "Month, week and resource calendar for two related Grit resources",
-  "description": "Adds a /calendar screen to the admin using CalendarKit Pro. One generated resource supplies the events (a datetime field), and a second one supplies the rows (rooms, people, equipment) through a relationship field. Click an event to open its record, drag it to another row to change the relationship, and drag it in time to change the date.",
+  "version": "0.2.0",
+  "summary": "Resource calendar and dashboard widget for Grit, powered by CalendarKit Pro",
+  "description": "Adds a /calendar page and an optional dashboard widget. One generated resource supplies the events through a datetime field; a second supplies the rows through a relationship field. Click to open a record, drag to change its date and row. All settings live in apps/admin/config/calendar.ts.",
   "requires": [],
   "goDeps": [],
   "nodeDeps": [
     { "name": "calendarkit-pro", "version": "^2.0.0", "workspace": "apps/admin" }
   ],
   "nextSteps": [
-    "On a triple Next.js project: pnpm install",
-    "Open /calendar. If the auto-detected mapping is wrong, edit the config block at the top of apps/admin/app/(dashboard)/calendar/page.tsx",
-    "The event resource needs a datetime field and a relationship-select to the row resource. Other architectures get no files from this version."
+    "pnpm install",
+    "Edit apps/admin/config/calendar.ts: slugs, sidebar label, icon, timezone and theme",
+    "Open /calendar, or the widget on /dashboard"
   ],
   "files": [
     {
+      "from": "files/calendar.config.ts",
+      "to": "apps/admin/config/calendar.ts",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar-data.ts",
+      "to": "apps/admin/components/calendar/calendar-data.ts",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
       "from": "files/calendar-page.tsx",
       "to": "apps/admin/app/(dashboard)/calendar/page.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar-widget.tsx",
+      "to": "apps/admin/components/calendar/calendar-widget.tsx",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "from": "files/calendar.css",
+      "to": "apps/admin/components/calendar/calendar.css",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     }
   ],
   "injections": [
     {
       "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
+      "marker": "import { resources } from \"@/resources\";",
+      "code": "import { CALENDAR_NAV } from \"@/config/calendar\";",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
       "marker": "// grit:nav:content",
-      "code": "  { href: \"/calendar\", label: \"Calendar\", iconKey: \"CalendarDays\", adminOnly: false },",
+      "code": "  { ...CALENDAR_NAV, adminOnly: false },",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     },
     {
@@ -37,6 +63,24 @@
       "file": "apps/admin/lib/icons.ts",
       "marker": "// grit:icons:map",
       "code": "  CalendarDays,",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "file": "apps/admin/lib/dashboard-catalog.ts",
+      "marker": "  { key: \"system:users\", kind: \"card\", module: \"System\", moduleIcon: \"Shield\", label: \"Users\", description: \"Total registered users\" },",
+      "code": "  { key: \"system:calendar\", kind: \"card\", module: \"Calendar\", moduleIcon: \"CalendarDays\", label: \"Calendar\", description: \"Upcoming events from the calendar plugin\" },",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
+      "marker": "import { ResourceWidgetsRow } from \"@/components/dashboard/ResourceWidgetsRow\";",
+      "code": "import { CalendarWidget } from \"@/components/calendar/calendar-widget\";",
+      "when": { "architecture": ["triple"], "frontend": ["next"] }
+    },
+    {
+      "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
+      "marker": "{/* v3.31.44 -- per-resource widgets. One row per registered",
+      "code": "      <CalendarWidget />",
       "when": { "architecture": ["triple"], "frontend": ["next"] }
     }
   ]

@@ -1,0 +1,25 @@
+/* CalendarKit -> Grit theme bridge.
+ *
+ * CalendarKit exposes every colour as a --ck-* variable on .ck-root. Pointing
+ * those at the admin's own tokens makes the calendar inherit the active Grit
+ * theme, including dark mode, without hardcoding any colour here.
+ */
+
+/* Two classes, not one: CalendarKit injects its own .ck-root stylesheet at
+ * runtime, so equal specificity would let whichever loads last win. */
+.ck-root.calendar-grit {
+  --ck-background: var(--bg-secondary);
+  --ck-foreground: var(--text-primary);
+  --ck-muted: var(--bg-tertiary);
+  --ck-muted-foreground: var(--text-secondary);
+  --ck-accent: var(--accent);
+  --ck-border: var(--border);
+  --ck-primary: var(--accent);
+  --ck-primary-foreground: var(--accent-fg);
+  --ck-ring: var(--accent);
+  --ck-destructive: var(--danger);
+  --ck-warning: var(--warning);
+  --ck-event: var(--accent);
+  --ck-radius: 0.5rem;
+  --ck-font: var(--font-sans);
+}
