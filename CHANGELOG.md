@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.3
+
+- Create now redirects to the resource's own create screen
+  (`/resources/<slug>?action=create`) instead of opening a sheet in the
+  calendar. The resource screen knows every required field.
+- Delete from CalendarKit's right-click menu asks for confirmation before the
+  DELETE is sent. The event is restored while the dialog is open, so it does
+  not vanish before the reader answers.
+
 ## 0.4.2
 
 - `canDelete: false` now hides Delete in CalendarKit's right-click menu too,

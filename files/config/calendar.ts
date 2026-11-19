@@ -144,15 +144,15 @@ export const CALENDARS: CalendarDefinition[] = [
       canEdit: true,
 
       // true | false, default false. On false CalendarKit's floating Create
-      // button is hidden from the UI. On true it opens the create sheet and
-      // a quick create writes a new row through POST with the field mapping
-      // below. The record page always creates rows too.
+      // button is hidden from the UI. On true it sends the reader to the
+      // resource's own create screen, /resources/<slug>?action=create, so every
+      // required field from the resource definition is available there.
       canCreate: false,
 
       // true | false, default false. On false Delete is hidden from the edit
       // sheet and from CalendarKit's right-click menu, and any attempted
-      // delete is rolled back. On true it asks for confirmation and removes
-      // the row with DELETE.
+      // delete is rolled back. On true both routes ask for confirmation and
+      // then remove the row with DELETE.
       canDelete: false,
 
       // Resource field keys the edit form is allowed to change. Values can be

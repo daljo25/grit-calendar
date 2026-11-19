@@ -133,16 +133,6 @@ export function patchEvent(
   return apiClient.patch(`${mapping.eventResource.endpoint}/${id}`, body);
 }
 
-export function createEvent(event: CalendarEvent, mapping: Mapping): Promise<unknown> {
-  const body: Record<string, unknown> = {
-    [mapping.titleField]: event.title,
-    [mapping.startField]: event.start.toISOString(),
-    [mapping.endField]: event.end.toISOString(),
-  };
-  if (event.resourceId) body[mapping.laneField] = event.resourceId;
-  return apiClient.post(mapping.eventResource.endpoint, body);
-}
-
 export function deleteEvent(id: string, mapping: Mapping): Promise<unknown> {
   return apiClient.delete(`${mapping.eventResource.endpoint}/${id}`);
 }

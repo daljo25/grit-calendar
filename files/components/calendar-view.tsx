@@ -5,13 +5,13 @@
 // drift in how they fetch, map or save events.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Scheduler, type CalendarEvent, type ViewType } from "calendarkit-pro";
 
 import type { CalendarDefinition } from "@/config/calendar";
 import {
   changedFields,
-  createEvent,
   deleteEvent,
   detailHref,
   patchEvent,
@@ -23,6 +23,7 @@ import {
   type Row,
 } from "@/components/calendar/calendar-data";
 import { CalendarEventForm } from "@/components/calendar/calendar-event-form";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import "@/components/calendar/calendar.css";
 
 export function CalendarView({ settings }: { settings: CalendarDefinition }) {
@@ -31,6 +32,7 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
   const [eventRows, setEventRows] = useState<Row[]>([]);
   const [laneRows, setLaneRows] = useState<Row[]>([]);
   const [view, setView] = useState<ViewType>("resource");
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -108,56 +110,43 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
     [events, mapping, settings, queryClient]
   );
 
+  // CalendarKit removes the event from its own state and shows an Undo toast
+  // before calling this. Restoring the rows first keeps it visible while the
+  // confirmation is open; the API is only touched after the reader confirms.
   const handleDelete = useCallback(
     (id: string) => {
       if (!mapping) return;
-      // CalendarKit removes the event from its own state and shows an Undo
-      // toast before calling this. When deletion is disabled, giving it a new
-      // events array puts the row back: the API was never touched.
       if (!settings.editing.canDelete) {
         setEventRows((rows) => [...rows]);
         return;
       }
-      setEventRows((rows) => rows.filter((row) => String(row.id) !== id));
-      deleteEvent(id, mapping)
-        .then(() =>
-          queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] })
-        )
-        .catch((err: unknown) =>
-          setError(err instanceof Error ? err.message : "Could not delete the event")
-        );
+      setEventRows((rows) => [...rows]);
+      setPendingDelete(id);
     },
-    [mapping, settings, queryClient]
+    [mapping, settings]
   );
 
-  const handleCreate = useCallback(
-    (event: Partial<CalendarEvent>) => {
-      if (!mapping) return;
-      if (!settings.editing.canCreate) {
-        setEventRows((rows) => [...rows]);
-        return;
-      }
-      // CalendarKit hands a partial event: a quick card may only know a
-      // sentence and a slot. Fill the required fields from those defaults.
-      const complete: CalendarEvent = {
-        id: event.id ?? crypto.randomUUID(),
-        title: event.title ?? "Event",
-        start: event.start ?? new Date(),
-        end: event.end ?? new Date(Date.now() + 3600000),
-        resourceId: event.resourceId,
-      };
-      createEvent(complete, mapping)
-        .then(() => readRows(mapping.eventResource, settings))
-        .then((rows) => {
-          setEventRows(rows);
-          queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] });
-        })
-        .catch((err: unknown) =>
-          setError(err instanceof Error ? err.message : "Could not create the event")
-        );
-    },
-    [mapping, settings, queryClient]
-  );
+  const confirmDelete = useCallback(() => {
+    if (!mapping || !pendingDelete) return;
+    const id = pendingDelete;
+    setPendingDelete(null);
+    setEventRows((rows) => rows.filter((row) => String(row.id) !== id));
+    deleteEvent(id, mapping)
+      .then(() =>
+        queryClient.invalidateQueries({ queryKey: [mapping.eventResource.endpoint] })
+      )
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : "Could not delete the event")
+      );
+  }, [mapping, pendingDelete, queryClient]);
+
+  // The resource's own create screen is the single place rows are made. The
+  // calendar only sends the reader there; it never writes a partial row that
+  // could miss required fields from the resource definition.
+  const handleCreate = useCallback(() => {
+    if (!mapping || !settings.editing.canCreate) return;
+    window.location.href = `/resources/${mapping.eventResource.slug}?action=create`;
+  }, [mapping, settings]);
 
   const handleClick = useCallback(
     (event: CalendarEvent) => {
@@ -188,6 +177,7 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
     .join(" ");
 
   return (
+    <>
     <div className="space-y-4 p-6">
       <header>
         <h1 className="text-2xl font-semibold text-foreground">
@@ -227,5 +217,19 @@ export function CalendarView({ settings }: { settings: CalendarDefinition }) {
         />
       </div>
     </div>
+    {typeof document !== "undefined" &&
+      createPortal(
+        <ConfirmModal
+          open={pendingDelete !== null}
+          variant="danger"
+          title="Delete this event?"
+          description="The event will be removed from the resource."
+          confirmLabel="Delete"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmDelete}
+        />,
+        document.body
+      )}
+    </>
   );
 }
