@@ -158,14 +158,7 @@ there. The component tests run in the Next admin.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Contributions are covered by the same license.
 
-## Publishing
-
-```bash
-git tag v0.5.0 && git push --tags
-grit plugin submit
-```
-
-The description in `plugin.json` is what `grit plugin list` shows, so keep it
-short and accurate there.
+Release steps, the verification a pull request should pass and the rules the
+source follows are in [CONTRIBUTING.md](CONTRIBUTING.md).
