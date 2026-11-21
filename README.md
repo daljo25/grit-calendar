@@ -81,9 +81,10 @@ Version 0.5.0 supports:
 - **triple + Vite/TanStack**: admin code in `apps/admin/src`
 
 Both get the same features, with frontend-specific files for routing and links.
-The plugin manifest has no admin-root placeholder, so other shapes are pending
-until the core gains one. See
-[grit#227](https://github.com/MUKE-coder/grit/issues/227).
+The manifest writes `{{ADMIN_ROOT}}`, which Grit resolves to wherever the panel
+lives, so the two shapes share one entry per file. Double and single projects
+resolve too, and are untested rather than unreachable: their routing is the
+remaining question, not their paths.
 
 ## Repository layout
 
@@ -93,13 +94,14 @@ own `grit plugin new` groups `files/api/` and `files/admin/`:
 | Directory | Installed into | Use for |
 |---|---|---|
 | `files/shared/` | both shapes | files whose body is identical for Next.js and TanStack |
-| `files/next/` | `apps/admin/` | files only Next.js needs |
-| `files/tanstack/` | `apps/admin/src/` | files only TanStack needs |
+| `files/next/` | the admin root | files only Next.js needs |
+| `files/tanstack/` | the admin root | files only TanStack needs |
 
 Paths under each directory are relative to the admin root, so the mapping is
 mechanical: `files/tanstack/routes/_dashboard/calendar.tsx` is written to
-`apps/admin/src/routes/_dashboard/calendar.tsx`, and one `files/shared/` entry
-is listed twice in the manifest, once per `frontend`.
+`{{ADMIN_ROOT}}/routes/_dashboard/calendar.tsx`, which is
+`apps/admin/src/routes/...` on a Vite project and `apps/admin/routes/...` on a
+Next one. Each source directory is one `directories` entry in the manifest.
 
 Two consequences worth knowing before editing:
 
@@ -108,24 +110,25 @@ Two consequences worth knowing before editing:
   shapes with different content, because the import of `next/navigation` versus
   `@/lib/next-compat` is the whole difference. Do not infer shared-ness from the
   path.
-- `plugin.json` still needs one entry per installed file, so a shared file
-  appears twice with the same `from`. If Grit ever gains an `{{ADMIN_ROOT}}`
-  placeholder, those pairs collapse to one entry each without moving any source
-  file. See [grit#227](https://github.com/MUKE-coder/grit/issues/227).
+- `plugin.json` maps directories rather than files, so adding a component to
+  `files/shared/components/calendar/` installs it with no manifest change.
+  Adding a *directory* still needs an entry.
 
 ## Limitations
 
-- Double, single, API-only and mobile projects are not supported. A community
-  manifest only maps individual files, so the plugin writes nothing there.
+- API-only and mobile projects have no admin panel, so the plugin installs
+  nothing there and says so. Double and single projects resolve their admin
+  root correctly now, but their routing has not been tested: the manifest keeps
+  an `architecture: ["triple"]` clause until it has.
 - The UI strings are English. No Grit plugin ships translations yet; i18n is
   planned for a later version. Half of it is cheap when it comes: CalendarKit
   takes a `translations` object of its own, so the library's labels are a small
   addition next to the plugin's.
-- The plugin's tests run in the Next.js admin only. A Vite admin's
-  `vitest.config.ts` points `@` at the app root rather than `src/`, so any test
-  that imports app code fails to resolve; Grit's own scaffold skips its
-  component tests there for the same reason. The Vite shape is still covered by
-  installation, type-checking and route generation in CI.
+- The create-intent test runs in the Next.js admin only, because the component
+  it covers is the Next one. The other two tests run in both shapes since Grit
+  3.555.0, which fixed the Vite admin's `vitest.config.ts` pointing `@` at the
+  app root rather than `src/`
+  ([grit#229](https://github.com/MUKE-coder/grit/issues/229)).
 - Each lane header shows `ID: <record id>` under its label. That line is
   hardcoded in CalendarKit 2.0.0 and its `translations.idLabel` falls back to
   the same text when empty (`translations?.idLabel || "ID: {id}"`), so there is

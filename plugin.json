@@ -17,10 +17,28 @@
     "Edit the calendar config: apps/admin/config/calendar.ts for Next.js, apps/admin/src/config/calendar.ts for Vite",
     "Open /calendar, or /calendar/<id> for the other entries in CALENDARS"
   ],
-  "files": [
+  "directories": [
     {
-      "from": "files/shared/config/calendar.ts",
-      "to": "apps/admin/config/calendar.ts",
+      "from": "files/shared/components/calendar",
+      "to": "{{ADMIN_ROOT}}/components/calendar",
+      "when": {
+        "architecture": [
+          "triple"
+        ]
+      }
+    },
+    {
+      "from": "files/shared/config",
+      "to": "{{ADMIN_ROOT}}/config",
+      "when": {
+        "architecture": [
+          "triple"
+        ]
+      }
+    },
+    {
+      "from": "files/next/components/calendar",
+      "to": "{{ADMIN_ROOT}}/components/calendar",
       "when": {
         "architecture": [
           "triple"
@@ -31,8 +49,8 @@
       }
     },
     {
-      "from": "files/shared/config/calendar.ts",
-      "to": "apps/admin/src/config/calendar.ts",
+      "from": "files/tanstack/components/calendar",
+      "to": "{{ADMIN_ROOT}}/components/calendar",
       "when": {
         "architecture": [
           "triple"
@@ -43,8 +61,8 @@
       }
     },
     {
-      "from": "files/shared/components/calendar/calendar-data.ts",
-      "to": "apps/admin/components/calendar/calendar-data.ts",
+      "from": "files/next/app",
+      "to": "{{ADMIN_ROOT}}/app",
       "when": {
         "architecture": [
           "triple"
@@ -55,8 +73,8 @@
       }
     },
     {
-      "from": "files/shared/components/calendar/calendar-data.ts",
-      "to": "apps/admin/src/components/calendar/calendar-data.ts",
+      "from": "files/tanstack/routes",
+      "to": "{{ADMIN_ROOT}}/routes",
       "when": {
         "architecture": [
           "triple"
@@ -67,200 +85,17 @@
       }
     },
     {
-      "from": "files/shared/components/calendar/calendar-view.tsx",
-      "to": "apps/admin/components/calendar/calendar-view.tsx",
+      "from": "files/shared/__tests__",
+      "to": "apps/admin/__tests__",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "from": "files/shared/components/calendar/calendar-view.tsx",
-      "to": "apps/admin/src/components/calendar/calendar-view.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/components/calendar/calendar-event-form.tsx",
-      "to": "apps/admin/components/calendar/calendar-event-form.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/components/calendar/calendar-event-form.tsx",
-      "to": "apps/admin/src/components/calendar/calendar-event-form.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/components/calendar/calendar.css",
-      "to": "apps/admin/components/calendar/calendar.css",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/components/calendar/calendar.css",
-      "to": "apps/admin/src/components/calendar/calendar.css",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/next/components/calendar/calendar-create-intent.tsx",
-      "to": "apps/admin/components/calendar/calendar-create-intent.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/tanstack/components/calendar/calendar-create-intent.tsx",
-      "to": "apps/admin/src/components/calendar/calendar-create-intent.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/next/components/calendar/calendar-widget.tsx",
-      "to": "apps/admin/components/calendar/calendar-widget.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/tanstack/components/calendar/calendar-widget.tsx",
-      "to": "apps/admin/src/components/calendar/calendar-widget.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/next/app/(dashboard)/calendar/page.tsx",
-      "to": "apps/admin/app/(dashboard)/calendar/page.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/next/app/(dashboard)/calendar/[id]/page.tsx",
-      "to": "apps/admin/app/(dashboard)/calendar/[id]/page.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/tanstack/routes/_dashboard/calendar.tsx",
-      "to": "apps/admin/src/routes/_dashboard/calendar.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/tanstack/routes/_dashboard/calendar/$id.tsx",
-      "to": "apps/admin/src/routes/_dashboard/calendar/$id.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/__tests__/calendar-data.test.ts",
-      "to": "apps/admin/__tests__/calendar-data.test.ts",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/next/__tests__/calendar-create-intent.test.tsx",
-      "to": "apps/admin/__tests__/calendar-create-intent.test.tsx",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "from": "files/shared/__tests__/calendar-event-form.test.tsx",
-      "to": "apps/admin/__tests__/calendar-event-form.test.tsx",
+      "from": "files/next/__tests__",
+      "to": "apps/admin/__tests__",
       "when": {
         "architecture": [
           "triple"
@@ -273,73 +108,58 @@
   ],
   "injections": [
     {
-      "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
-      "marker": "import { resources } from \"@/resources\";",
+      "file": "{{ADMIN_ROOT}}/components/chrome/CollapsibleSidebar.tsx",
+      "marker": "// grit:nav:imports",
       "code": "import { CALENDAR_NAV } from \"@/config/calendar\";",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "file": "apps/admin/components/chrome/CollapsibleSidebar.tsx",
+      "file": "{{ADMIN_ROOT}}/components/chrome/CollapsibleSidebar.tsx",
       "marker": "// grit:nav:content",
       "code": "  ...CALENDAR_NAV,",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "file": "apps/admin/lib/icons.ts",
+      "file": "{{ADMIN_ROOT}}/lib/icons.ts",
       "marker": "// grit:icons:import",
       "code": "  CalendarDays,",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "file": "apps/admin/lib/icons.ts",
+      "file": "{{ADMIN_ROOT}}/lib/icons.ts",
       "marker": "// grit:icons:map",
       "code": "  CalendarDays,",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "file": "apps/admin/lib/dashboard-catalog.ts",
-      "marker": "  { key: \"system:users\", kind: \"card\", module: \"System\", moduleIcon: \"Shield\", label: \"Users\", description: \"Total registered users\" },",
+      "file": "{{ADMIN_ROOT}}/lib/dashboard-catalog.ts",
+      "marker": "// grit:dashboard:catalog",
       "code": "  { key: \"system:calendar\", kind: \"card\", module: \"Calendar\", moduleIcon: \"CalendarDays\", label: \"Calendar\", description: \"Upcoming events from the calendar plugin\" },",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "next"
         ]
       }
     },
     {
-      "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
-      "marker": "import { ResourceWidgetsRow } from \"@/components/dashboard/ResourceWidgetsRow\";",
+      "file": "{{ADMIN_ROOT}}/app/(dashboard)/dashboard/page.tsx",
+      "marker": "// grit:dashboard:imports",
       "code": "import { CalendarWidget } from \"@/components/calendar/calendar-widget\";",
       "when": {
         "architecture": [
@@ -351,99 +171,8 @@
       }
     },
     {
-      "file": "apps/admin/app/(dashboard)/dashboard/page.tsx",
-      "marker": "{/* v3.31.44 -- per-resource widgets. One row per registered",
-      "code": "      <CalendarWidget />",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/components/resource/resource-page.tsx",
-      "marker": "// grit:resource:imports",
-      "code": "import { CalendarCreateIntent } from \"@/components/calendar/calendar-create-intent\";",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/components/resource/resource-page.tsx",
-      "marker": "{!c.isFormPage && c.form.open && !CustomForm && (",
-      "code": "      <CalendarCreateIntent controller={c} slug={resource.slug} />",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "next"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/components/chrome/CollapsibleSidebar.tsx",
-      "marker": "// grit:nav:content",
-      "code": "  ...CALENDAR_NAV,",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/lib/icons.ts",
-      "marker": "// grit:icons:import",
-      "code": "  CalendarDays,",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/lib/icons.ts",
-      "marker": "// grit:icons:map",
-      "code": "  CalendarDays,",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/lib/dashboard-catalog.ts",
-      "marker": "  { key: \"system:users\", kind: \"card\", module: \"System\", moduleIcon: \"Shield\", label: \"Users\", description: \"Total registered users\" },",
-      "code": "  { key: \"system:calendar\", kind: \"card\", module: \"Calendar\", moduleIcon: \"CalendarDays\", label: \"Calendar\", description: \"Upcoming events from the calendar plugin\" },",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/pages/dashboard.tsx",
-      "marker": "import { ResourceWidgetsRow } from \"@/components/dashboard/ResourceWidgetsRow\";",
+      "file": "{{ADMIN_ROOT}}/pages/dashboard.tsx",
+      "marker": "// grit:dashboard:imports",
       "code": "import { CalendarWidget } from \"@/components/calendar/calendar-widget\";",
       "when": {
         "architecture": [
@@ -455,8 +184,21 @@
       }
     },
     {
-      "file": "apps/admin/src/pages/dashboard.tsx",
-      "marker": "{/* v3.31.44 -- per-resource widgets. One row per registered",
+      "file": "{{ADMIN_ROOT}}/app/(dashboard)/dashboard/page.tsx",
+      "marker": "{/* grit:dashboard:widgets */}",
+      "code": "      <CalendarWidget />",
+      "when": {
+        "architecture": [
+          "triple"
+        ],
+        "frontend": [
+          "next"
+        ]
+      }
+    },
+    {
+      "file": "{{ADMIN_ROOT}}/pages/dashboard.tsx",
+      "marker": "{/* grit:dashboard:widgets */}",
       "code": "      <CalendarWidget />",
       "when": {
         "architecture": [
@@ -468,41 +210,22 @@
       }
     },
     {
-      "file": "apps/admin/src/components/resource/resource-page.tsx",
+      "file": "{{ADMIN_ROOT}}/components/resource/resource-page.tsx",
       "marker": "// grit:resource:imports",
       "code": "import { CalendarCreateIntent } from \"@/components/calendar/calendar-create-intent\";",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "tanstack"
         ]
       }
     },
     {
-      "file": "apps/admin/src/components/resource/resource-page.tsx",
-      "marker": "{!c.isFormPage && c.form.open && !CustomForm && (",
+      "file": "{{ADMIN_ROOT}}/components/resource/resource-page.tsx",
+      "marker": "{/* grit:resource:slot */}",
       "code": "      <CalendarCreateIntent controller={c} slug={resource.slug} />",
       "when": {
         "architecture": [
           "triple"
-        ],
-        "frontend": [
-          "tanstack"
-        ]
-      }
-    },
-    {
-      "file": "apps/admin/src/components/chrome/CollapsibleSidebar.tsx",
-      "marker": "import { resources } from \"@/resources\";",
-      "code": "import { CALENDAR_NAV } from \"@/config/calendar\";",
-      "when": {
-        "architecture": [
-          "triple"
-        ],
-        "frontend": [
-          "tanstack"
         ]
       }
     }
