@@ -50,10 +50,9 @@ jobs:
             typecheck: "npx tsc --noEmit"
           - name: vite
             arch: "--triple --vite"
-            # The plugin ships no tests here (see README: a Vite admin's
-            # vitest config points "@" at the app root, not src/), so this
-            # suite proves the install did not break the admin's own.
-            suite: the admin's own tests, with the plugin installed
+            # Both shared component tests ship here too; the create-intent one
+            # stays Next-only, because the component it covers is the Next one.
+            suite: the admin's own tests plus the plugin's shared ones
             # A Vite admin generates its route tree, so tsc knows nothing
             # about its routes until `tsr generate` has run, and generation is
             # also where a route file whose path disagrees with its URL fails.

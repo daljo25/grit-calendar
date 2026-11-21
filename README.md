@@ -46,6 +46,16 @@ grit plugin add github.com/daljo25/grit-calendar
 pnpm install
 ```
 
+Requires **Grit 3.558.0 or newer**. The manifest writes through the `// grit:`
+markers and the `{{ADMIN_ROOT}}` placeholder that release added, so an older CLI
+stops with `marker "// grit:nav:imports" not found` instead of installing a
+calendar with no sidebar link. An existing project gets the markers from
+`grit upgrade`.
+
+The plugin is in the community index, which is what `grit plugin list` and the
+marketplace page read. Community plugins install by repository, so the command
+above stays the one to use.
+
 ## Configuration
 
 Everything is in **`apps/admin/config/calendar.ts`** for Next.js projects and
@@ -75,7 +85,7 @@ live at `/calendar/<id>`. The sidebar and the widget derive from the same array.
 
 ## Supported projects
 
-Version 0.5.0 supports:
+Version 0.6.0 supports:
 
 - **triple + Next.js**: admin code in `apps/admin`
 - **triple + Vite/TanStack**: admin code in `apps/admin/src`
@@ -83,8 +93,8 @@ Version 0.5.0 supports:
 Both get the same features, with frontend-specific files for routing and links.
 The manifest writes `{{ADMIN_ROOT}}`, which Grit resolves to wherever the panel
 lives, so the two shapes share one entry per file. Double and single projects
-resolve too, and are untested rather than unreachable: their routing is the
-remaining question, not their paths.
+resolve their admin root too, but their routing has not been tested, so every
+entry still carries `architecture: ["triple"]` and they install nothing.
 
 ## Repository layout
 
@@ -157,7 +167,8 @@ checks the files and injections, removes it and checks again.
 CI runs three shapes: triple Next, triple Vite and an API-only project that must
 stay untouched. Both admins are type-checked, with the Vite one generating its
 TanStack route tree first, since a route that disagrees with its path only fails
-there. The component tests run in the Next admin.
+there. Both suites run too, with the plugin's own tests inside them; only the
+`?action=create` test is Next-only, because the component it covers is.
 
 ## License
 

@@ -1,14 +1,18 @@
 // The edit sheet is built from Grit's primitives. These cover the field
 // allowlist and the delete confirmation, the two behaviours that changed the
 // most since the first release.
+//
+// The imports go through "@/", not "../", because this file ships to both
+// admins: a Vite admin keeps its code under src/ while the tests stay at
+// apps/admin/__tests__, so a relative path resolves to nothing there.
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { CALENDARS } from "../config/calendar";
-import type { Mapping } from "../components/calendar/calendar-data";
-import { CalendarEventForm } from "../components/calendar/calendar-event-form";
+import { CALENDARS } from "@/config/calendar";
+import type { Mapping } from "@/components/calendar/calendar-data";
+import { CalendarEventForm } from "@/components/calendar/calendar-event-form";
 
 const mapping = {
   eventResource: { slug: "bookings" },

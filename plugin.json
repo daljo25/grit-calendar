@@ -1,6 +1,6 @@
 {
   "name": "calendar",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "summary": "Multiple resource calendars and dashboard widget for Grit, powered by CalendarKit Pro",
   "description": "Adds /calendar and /calendar/<id> pages plus an optional dashboard widget. Each calendar reads two generated resources: one with a datetime field for the events, one linked by a relationship field for the rows. The edit form is built from the resource fields listed in the calendar config (apps/admin/config/calendar.ts on Next.js, apps/admin/src/config/calendar.ts on Vite), with configurable create, delete and click behaviour.",
   "requires": [],

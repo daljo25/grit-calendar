@@ -1,6 +1,10 @@
 // Behaviour tests for the pure data helpers. The shell workflow covers
 // install and removal; these cover the mapping, timezone and persistence
 // rules that a grep cannot check.
+//
+// The imports go through "@/", not "../", because this file ships to both
+// admins: a Vite admin keeps its code under src/ while the tests stay at
+// apps/admin/__tests__, so a relative path resolves to nothing there.
 
 import { describe, expect, it } from "vitest";
 
@@ -14,8 +18,8 @@ import {
   toInputValue,
   type Mapping,
   type Row,
-} from "../components/calendar/calendar-data";
-import type { CalendarDefinition } from "../config/calendar";
+} from "@/components/calendar/calendar-data";
+import type { CalendarDefinition } from "@/config/calendar";
 
 const settings = {
   id: "events",

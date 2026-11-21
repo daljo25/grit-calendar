@@ -30,6 +30,8 @@ VIEW='apps/admin/components/calendar/calendar-view.tsx'
 PAGE='apps/admin/app/(dashboard)/calendar/page.tsx'
 IDPAGE='apps/admin/app/(dashboard)/calendar/[id]/page.tsx'
 TEST='apps/admin/__tests__/calendar-data.test.ts'
+TEST_INTENT='apps/admin/__tests__/calendar-create-intent.test.tsx'
+TEST_FORM='apps/admin/__tests__/calendar-event-form.test.tsx'
 WIDGET='apps/admin/components/calendar/calendar-widget.tsx'
 CSS='apps/admin/components/calendar/calendar.css'
 SIDEBAR='apps/admin/components/chrome/CollapsibleSidebar.tsx'
@@ -37,7 +39,7 @@ ICONS='apps/admin/lib/icons.ts'
 CATALOG='apps/admin/lib/dashboard-catalog.ts'
 DASHBOARD='apps/admin/app/(dashboard)/dashboard/page.tsx'
 
-for file in "$CONFIG" "$DATA" "$FORM" "$VIEW" "$PAGE" "$IDPAGE" "$TEST" "$WIDGET" "$CSS"; do
+for file in "$CONFIG" "$DATA" "$FORM" "$VIEW" "$PAGE" "$IDPAGE" "$TEST" "$TEST_INTENT" "$TEST_FORM" "$WIDGET" "$CSS"; do
   test -f "$file" || { echo "missing $file" >&2; exit 1; }
 done
 
@@ -69,6 +71,12 @@ if grep -q 'system:calendar\|CalendarWidget' "$CATALOG" "$DASHBOARD"; then
   echo "removal left the dashboard widget behind" >&2
   exit 1
 fi
+# The dependency is what the community review caught: removal used to revert
+# every file and leave calendarkit-pro in package.json.
+if grep -q 'calendarkit-pro' apps/admin/package.json; then
+  echo "removal left calendarkit-pro in the Next admin" >&2
+  exit 1
+fi
 (cd apps/api && go build ./...)
 
 # Triple + Vite (TanStack) has different paths for the admin code. The same
@@ -92,7 +100,9 @@ for file in \
   "apps/admin/src/components/calendar/calendar.css" \
   "apps/admin/src/components/calendar/calendar-create-intent.tsx" \
   "apps/admin/src/routes/_dashboard/calendar.tsx" \
-  'apps/admin/src/routes/_dashboard/calendar/$id.tsx'; do
+  'apps/admin/src/routes/_dashboard/calendar/$id.tsx' \
+  "apps/admin/__tests__/calendar-data.test.ts" \
+  "apps/admin/__tests__/calendar-event-form.test.tsx"; do
   test -f "$file" || { echo "missing $file" >&2; exit 1; }
 done
 grep -q 'CALENDAR_NAV' apps/admin/src/components/chrome/CollapsibleSidebar.tsx
@@ -101,8 +111,14 @@ grep -q 'CalendarWidget' apps/admin/src/pages/dashboard.tsx
 
 "$BIN" plugin remove calendar --force >/dev/null
 test ! -f apps/admin/src/config/calendar.ts
+test ! -f apps/admin/__tests__/calendar-data.test.ts
+test ! -f apps/admin/__tests__/calendar-event-form.test.tsx
 if grep -q 'CALENDAR_NAV' apps/admin/src/components/chrome/CollapsibleSidebar.tsx; then
   echo "removal left the TanStack sidebar link behind" >&2
+  exit 1
+fi
+if grep -q 'calendarkit-pro' apps/admin/package.json; then
+  echo "removal left calendarkit-pro in the Vite admin" >&2
   exit 1
 fi
 

@@ -48,6 +48,13 @@ it exposes no prop for.
 already depend on that library's class names, which is why `calendarkit-pro` is
 pinned to an exact version. A third is a real cost, so argue for it.
 
+**Anchor on a `// grit:` marker, never on generated source.** An injection whose
+marker is a line of Grit's own output, such as a seeded catalogue row, a JSX
+condition or a version comment, installs "cleanly" and does nothing the day
+that line is reformatted. A marker that is absent is a hard error, which is the
+failure you want. Grit 3.558.0 added the markers this plugin uses, and
+`grit upgrade` adds them to an existing project.
+
 **Every injection needs a removal, and a `when` clause.** The manifest's
 injections are what removal replays; an entry without a `when` will try to
 write admin files into a project that has no admin. The API-only CI job exists
@@ -56,7 +63,13 @@ to catch exactly that.
 **A file is `shared/` only when both shapes can run the same body.** Not when
 two shapes happen to use the same relative path: `calendar-create-intent.tsx`
 exists in both directories with different content, because one imports
-`next/navigation` and the other `@/lib/next-compat`.
+`next/navigation` and the other `@/lib/next-compat`. The same rule applies to
+the tests: anything under `files/shared/__tests__` imports through `@/`, since
+`../` only resolves where the tests sit beside the components.
+
+`plugin.json` maps directories, so a new component inside
+`files/shared/components/calendar/` installs with no manifest change. A new
+directory still needs an entry.
 
 ## Releasing
 
@@ -72,7 +85,10 @@ including any you did not mean to publish. Pushing a tag runs the CI suite once
 more, which is the last check before the release is announced anywhere.
 
 Then publish the release from that tag, with the notes taken from the top
-section of `CHANGELOG.md`.
+section of `CHANGELOG.md`. Bump `version` in `plugin.json` and write that
+section first: the manifest is what `grit plugin add` installs, so a release
+that changes it without a version is a release nobody can tell apart from the
+last one.
 
 `plugin.json`'s `description` is what `grit plugin list` shows, so keep it short
 and accurate. `nextSteps` is what `grit plugin add` prints, and it names both

@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.6.0
+
+The manifest moved to the markers and the admin placeholder Grit added in
+3.558.0. Nothing under `files/` moved and no component behaviour changed. The
+migration is MUKE-coder's [PR #1](https://github.com/daljo25/grit-calendar/pull/1).
+
+- `plugin.json` maps 8 directories instead of 21 files, and writes
+  `{{ADMIN_ROOT}}`, so one entry serves both admin shapes. Adding a component to
+  an existing directory no longer needs a manifest change.
+- Every injection anchors on a `// grit:` marker instead of a line of generated
+  source. Ten of them used to anchor on a seeded catalogue row, a version
+  comment and a JSX condition, which would have kept installing "cleanly" after
+  Grit reformatted them, with the sidebar link, widget or create bridge silently
+  absent.
+- Requires Grit 3.558.0. On an older CLI the install stops with
+  `marker ... not found` rather than succeeding with half a calendar; an
+  existing project gets the markers from `grit upgrade`.
+- The dashboard widget now appears in all four dashboard styles. It only
+  appeared in the default one before, because the other three have no
+  per-resource widget row and the old anchor lived inside that row.
+- The two shared component tests now run in both admins. They import through
+  `@/` rather than `../`, which only resolved where the tests sit beside the
+  components. The `?action=create` test stays Next-only, because the component
+  it covers is the Next one.
+- Listed in the community index, first entry, since Grit 3.559.0.
+
 ## 0.5.0
 
 First publishable beta. No behaviour changed since 0.4.4.
