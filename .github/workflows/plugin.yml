@@ -3,9 +3,13 @@ name: plugin
 on:
   # main and tags, not every branch: work in progress does not need three
   # scaffolded projects, and the branch that must never be broken is main.
-  # A tag runs it once more, which is the last check before a release is
-  # announced anywhere. Pull requests still run it: that is where a change
-  # gets reviewed before it reaches main.
+  # Pull requests still run it: that is where a change gets reviewed before it
+  # reaches main.
+  #
+  # A tag pushed by hand runs the matrix again. The tag the release job creates
+  # does not, because a push made with GITHUB_TOKEN starts no workflow: the
+  # matrix on that same commit has just passed, which is the check a tag would
+  # repeat.
   push:
     branches: [main]
     tags: ["v*"]
@@ -170,3 +174,70 @@ jobs:
         run: |
           grit plugin remove calendar --force
           cd apps/api && go build ./...
+
+  # Tags and publishes once the three shapes pass on main. The version comes
+  # from plugin.json, so a release is a version bump and a changelog entry in
+  # the pull request that changes the plugin, not a second ritual afterwards.
+  #
+  # Skipped on a tag push: that run is the matrix for a tag somebody pushed by
+  # hand, and the tag already exists by definition.
+  release:
+    name: release
+    needs: install-and-remove
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      # Tags and releases are writes. The rest of the workflow keeps read.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # A shallow clone cannot push a tag ref.
+          fetch-depth: 0
+
+      - name: Tag and publish, if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          version=$(python3 -c 'import json; print(json.load(open("plugin.json"))["version"])')
+          tag="v$version"
+          echo "plugin.json says $tag"
+
+          # The notes are the changelog section for this version. A release
+          # without them is worse than no release: it is the one place people
+          # look to decide whether to upgrade.
+          notes=$(awk -v v="$version" '
+            index($0, "## " v) == 1 { inside = 1; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md)
+
+          # Idempotent in both directions: a run that finds its tag already
+          # published does nothing, and a run that finds a tag with no release
+          # (a publish that failed halfway) finishes it instead of stopping.
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "$tag is already published. Nothing to do."
+              exit 0
+            fi
+            echo "$tag exists without a release; publishing it."
+          else
+            if [ -z "$notes" ]; then
+              echo "CHANGELOG.md has no '## $version' section." >&2
+              echo "Write it before bumping plugin.json, or the release has no notes." >&2
+              exit 1
+            fi
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$tag" -m "$tag: see CHANGELOG.md"
+            git push origin "$tag"
+          fi
+
+          if [ -n "$notes" ]; then
+            printf '%s\n' "$notes" > /tmp/notes.md
+            gh release create "$tag" --title "$tag" --notes-file /tmp/notes.md
+          else
+            gh release create "$tag" --title "$tag" --notes "See CHANGELOG.md for $version."
+          fi

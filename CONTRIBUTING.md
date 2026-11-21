@@ -29,7 +29,8 @@ tree does not exist until it is generated.
 
 CI runs the same install and remove cycle on three shapes (triple Next, triple
 Vite, API-only), type-checks both admins and runs both suites. It runs on
-`main`, on pull requests, and on tags.
+`main`, on pull requests, and on tags; on `main` it also tags and publishes the
+release when the version in `plugin.json` is new.
 
 ## Ground rules
 
@@ -73,22 +74,28 @@ directory still needs an entry.
 
 ## Releasing
 
-For the maintainer, since it changes what the repository says in public:
+A release is a version bump, not a second ritual. In the pull request that
+changes the plugin:
+
+- bump `version` in `plugin.json`
+- add the matching `## X.Y.Z` section at the top of `CHANGELOG.md`, since that
+  section becomes the release body
+
+Merging to `main` runs the three shapes, and when they pass a `release` job tags
+`vX.Y.Z` and publishes it with those notes. A run that finds its tag already
+published does nothing; a run that finds a tag with no release finishes it. The
+job refuses to publish when the changelog has no section for the version,
+because the notes are the one place people look before upgrading.
+
+Tagging by hand still works, and is how a release that was closed is redone:
 
 ```bash
-git tag -a vX.Y.Z -m "vX.Y.Z: one line on what this release is"
+git tag -a vX.Y.Z -m "vX.Y.Z: see CHANGELOG.md"
 git push origin vX.Y.Z
 ```
 
 Push the tag by name. `git push --tags` sends every tag in the repository,
-including any you did not mean to publish. Pushing a tag runs the CI suite once
-more, which is the last check before the release is announced anywhere.
-
-Then publish the release from that tag, with the notes taken from the top
-section of `CHANGELOG.md`. Bump `version` in `plugin.json` and write that
-section first: the manifest is what `grit plugin add` installs, so a release
-that changes it without a version is a release nobody can tell apart from the
-last one.
+including any you did not mean to publish.
 
 `plugin.json`'s `description` is what `grit plugin list` shows, so keep it short
 and accurate. `nextSteps` is what `grit plugin add` prints, and it names both
